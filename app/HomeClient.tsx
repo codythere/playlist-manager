@@ -16,7 +16,7 @@ import { Button } from "@/app/components/ui/button";
 import { Checkbox } from "@/app/components/ui/checkbox";
 import { ActionsToolbar } from "@/app/components/ActionsToolbar";
 import { PlaylistList } from "@/app/components/PlaylistList";
-// import { TopBar } from "@/app/components/TopBar"; // 如有使用就打開
+// import { TopBar } from "@/app/components/TopBar";
 
 /* =========================
  * 型別與共用工具
@@ -248,7 +248,7 @@ export default function HomeClient() {
     [playlistsQ.data?.playlists]
   );
 
-  /* ---- 視圖狀態：先選清單 → 再管理影片 ---- */
+  /* ---- 視圖狀態 ---- */
   const [view, setView] = React.useState<View>("select-playlists");
 
   /* ---- 稿件 1：多選播放清單 ---- */
@@ -256,7 +256,6 @@ export default function HomeClient() {
     Set<string>
   >(new Set());
 
-  // 當清單載入後，如果還沒選，預設先勾兩個（符合稿件示意）
   React.useEffect(() => {
     if (allPlaylists.length > 0 && checkedPlaylistIds.size === 0) {
       setCheckedPlaylistIds(new Set(allPlaylists.slice(0, 2).map((p) => p.id)));
@@ -277,7 +276,7 @@ export default function HomeClient() {
     setView("manage-items");
   };
 
-  /* ---- 稿件 2：跨欄位選取影片（每個 playlist 一組 Set） ---- */
+  /* ---- 稿件 2：跨欄位選取影片 ---- */
   const [selectedMap, setSelectedMap] = React.useState<
     Record<string, Set<string>>
   >({});
@@ -287,7 +286,7 @@ export default function HomeClient() {
     [allPlaylists, checkedPlaylistIds]
   );
 
-  /* ---- 依「被選清單」載入每欄影片（用子查詢避免 Hook 順序問題） ---- */
+  /* ---- 依「被選清單」載入每欄影片 ---- */
   const columnsData = useQueries({
     queries: confirmedPlaylists.map((p) => ({
       queryKey: ["playlist-items", p.id],
@@ -295,7 +294,6 @@ export default function HomeClient() {
         const data = await apiRequest<PlaylistItemsPayload>(
           `/api/playlist-items?playlistId=${encodeURIComponent(p.id)}`
         );
-        // 映射到 UI 用的 Summary
         const items: PlaylistItemSummary[] = (data.items ?? []).map((it) => ({
           playlistItemId: it.id,
           videoId: it.videoId,
@@ -311,15 +309,15 @@ export default function HomeClient() {
     })),
   });
 
-  /* ---- 動作列：總選取數與配額估算（對齊稿件的顯示） ---- */
+  /* ---- 動作列數據 ---- */
   const totalSelectedCount = React.useMemo(
     () =>
       Object.values(selectedMap).reduce((sum, s) => sum + (s?.size ?? 0), 0),
     [selectedMap]
   );
-  const estimatedQuota = totalSelectedCount * 50; // 估算方式可調整
+  const estimatedQuota = totalSelectedCount * 50;
 
-  /* ---- Mutations（沿用你原本的 API） ---- */
+  /* ---- Mutations ---- */
   const addMutation = useMutation({
     mutationFn: (payload: { targetPlaylistId: string; videoIds: string[] }) =>
       apiRequest<OperationResult>("/api/bulk/add", {
@@ -327,7 +325,6 @@ export default function HomeClient() {
         body: JSON.stringify(payload),
       }),
     onSuccess: () => {
-      // 重新拉清單/欄位
       queryClient.invalidateQueries({ queryKey: ["playlists"] });
       confirmedPlaylists.forEach((p) =>
         queryClient.invalidateQueries({ queryKey: ["playlist-items", p.id] })
@@ -345,7 +342,6 @@ export default function HomeClient() {
         body: JSON.stringify(payload),
       }),
     onSuccess: (_, variables) => {
-      // 清掉已選、重抓來源與清單
       setSelectedMap((prev) => ({
         ...prev,
         [variables.sourcePlaylistId]: new Set(),
@@ -368,7 +364,6 @@ export default function HomeClient() {
         body: JSON.stringify(payload),
       }),
     onSuccess: (_, variables) => {
-      // 清掉來源的選取並刷新兩側
       setSelectedMap((prev) => ({
         ...prev,
         [variables.sourcePlaylistId]: new Set(),
@@ -383,7 +378,7 @@ export default function HomeClient() {
     },
   });
 
-  /* ---- 跨欄位：把目前被勾選的影片彙整 ---- */
+  /* ---- 抽取被勾選 ---- */
   function getSelectedFromAllColumns() {
     const result: {
       bySource: Record<
@@ -397,7 +392,6 @@ export default function HomeClient() {
       const q = columnsData.find((cq) => cq.data?.playlist.id === p.id);
       const set = selectedMap[p.id] ?? new Set<string>();
       const items = q?.data?.items ?? [];
-
       const picked = items.filter((it) => set.has(it.playlistItemId));
       const playlistItemIds = picked.map((it) => it.playlistItemId);
       const videoIds = picked.map((it) => it.videoId);
@@ -411,12 +405,11 @@ export default function HomeClient() {
     return result;
   }
 
-  /* ---- 動作列 Callback（零參數，符合 ActionsToolbarProps） ---- */
+  /* ---- 動作列 Callback（零參數） ---- */
   const handleAddSelected = () => {
     const { allVideoIds } = getSelectedFromAllColumns();
     if (allVideoIds.length === 0) return;
 
-    // 以 prompt 方式暫時取得目標清單（不動 Toolbar 型別）
     const hint =
       "輸入目標播放清單 ID（或精準標題）。\n可用的清單：\n" +
       allPlaylists.map((p) => `• ${p.title} (${p.id})`).join("\n");
@@ -429,7 +422,6 @@ export default function HomeClient() {
   };
 
   const handleRemoveSelected = () => {
-    // 將每欄的已選匯總，分欄呼叫 /bulk/remove
     Object.entries(selectedMap).forEach(([sourcePlaylistId, set]) => {
       const ids = Array.from(set);
       if (ids.length > 0) {
@@ -447,7 +439,6 @@ export default function HomeClient() {
       allPlaylists.find((p) => p.id === input || p.title === input)?.id ?? "";
     if (!to) return;
 
-    // 將每欄的已選逐欄搬移到 to
     Object.entries(selectedMap).forEach(([sourcePlaylistId, set]) => {
       const itemsInSource =
         columnsData
@@ -466,10 +457,7 @@ export default function HomeClient() {
     });
   };
 
-  const onUndo = () => {
-    // 這裡保留鉤子，若你有動作回復 API 可在此串接
-  };
-
+  const onUndo = () => {};
   const backToSelect = () => setView("select-playlists");
   const clearAllSelections = () => setSelectedMap({});
 
@@ -490,9 +478,77 @@ export default function HomeClient() {
   });
 
   /* =========================
-   * Render（對齊 UI 稿件）
+   * 兩條同步滑軌（Top/Bottom）
+   * ========================= */
+  const topScrollRef = React.useRef<HTMLDivElement>(null);
+  const bottomScrollRef = React.useRef<HTMLDivElement>(null);
+  const rowRef = React.useRef<HTMLDivElement>(null);
+  const [contentWidth, setContentWidth] = React.useState(0);
+  const syncingRef = React.useRef<"top" | "bottom" | null>(null);
+
+  const onTopScroll = () => {
+    if (!topScrollRef.current || !bottomScrollRef.current) return;
+    if (syncingRef.current === "bottom") return;
+    syncingRef.current = "top";
+    bottomScrollRef.current.scrollLeft = topScrollRef.current.scrollLeft;
+    syncingRef.current = null;
+  };
+  const onBottomScroll = () => {
+    if (!topScrollRef.current || !bottomScrollRef.current) return;
+    if (syncingRef.current === "top") return;
+    syncingRef.current = "bottom";
+    topScrollRef.current.scrollLeft = bottomScrollRef.current.scrollLeft;
+    syncingRef.current = null;
+  };
+
+  // 追蹤每欄的 items 長度，內容變化時重算寬度
+  const columnsKey = React.useMemo(
+    () =>
+      columnsData
+        .map(
+          (q, i) =>
+            `${confirmedPlaylists[i]?.id ?? "x"}:${q.data?.items?.length ?? 0}`
+        )
+        .join("|"),
+    [columnsData, confirmedPlaylists]
+  );
+
+  // 更穩定的寬度計算：用 rowRef.scrollWidth
+  React.useLayoutEffect(() => {
+    const update = () => {
+      const w =
+        rowRef.current?.scrollWidth ??
+        bottomScrollRef.current?.scrollWidth ??
+        0;
+      setContentWidth(w);
+    };
+
+    update(); // 初次
+
+    let ro: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== "undefined" && rowRef.current) {
+      ro = new ResizeObserver(update);
+      ro.observe(rowRef.current);
+    }
+    window.addEventListener("resize", update);
+
+    return () => {
+      ro?.disconnect();
+      window.removeEventListener("resize", update);
+    };
+  }, [confirmedPlaylists.length, columnsKey]);
+
+  /* =========================
+   * Render
    * ========================= */
 
+  // 避免「SSR 首屏就是 Loading，但 hydration 還沒開始就被其它 effect 影響」的狀況
+  // 白話文: 先顯示 Loading 畫面，等前端 JS 準備好再渲染真內容
+  const [mounted, setMounted] = React.useState(false);
+  React.useEffect(() => setMounted(true), []);
+  if (!mounted) {
+    return <div className="p-6 text-sm text-muted-foreground">Loading…</div>;
+  }
   // 1) Auth 狀態
   if (authQ.isLoading)
     return <div className="p-6 text-sm text-muted-foreground">Loading…</div>;
@@ -520,16 +576,14 @@ export default function HomeClient() {
     );
   }
 
-  // 2) 主介面（兩種視圖）
+  // 2) 主介面
   return (
     <div className="min-h-dvh">
-      {/* 如需上方列，可引入 TopBar；先留白 */}
       {/* <TopBar /> */}
 
       {view === "select-playlists" ? (
         /* ---------- UI 稿件 1：多選播放清單 ---------- */
         <main className="mx-auto max-w-6xl p-6 space-y-8">
-          {/* 已選 Chips + 確認/取消 */}
           <section className="space-y-3">
             <div className="text-lg font-semibold">已選取播放清單：</div>
             <div className="flex flex-wrap gap-2">
@@ -559,7 +613,6 @@ export default function HomeClient() {
             </div>
           </section>
 
-          {/* 播放清單網格（可勾選） */}
           <section className="space-y-3">
             <div className="text-xl font-semibold">播放清單</div>
             <PlaylistList
@@ -574,14 +627,12 @@ export default function HomeClient() {
       ) : (
         /* ---------- UI 稿件 2：管理多欄影片 ---------- */
         <main className="mx-auto max-w-[1200px] p-6 space-y-8">
-          {/* 返回連結 */}
           <section className="flex justify-end">
             <Button variant="ghost" onClick={backToSelect}>
               ← 返回選取播放清單
             </Button>
           </section>
 
-          {/* 上：已確認清單 Chips */}
           <section className="space-y-3">
             <div className="text-lg font-semibold">已選取播放清單：</div>
             <div className="flex flex-wrap gap-2">
@@ -596,15 +647,14 @@ export default function HomeClient() {
             </div>
           </section>
 
-          {/* 中：主要工具列（總選取數 / 估算配額） */}
           <section>
             <ActionsToolbar
               selectedCount={totalSelectedCount}
               playlists={allPlaylists}
-              selectedPlaylistId={null} // 仍由 Toolbar 內部管理目標，這裡不控制
-              onAdd={handleAddSelected} // ← 改為 () => void
+              selectedPlaylistId={null}
+              onAdd={handleAddSelected}
               onRemove={handleRemoveSelected}
-              onMove={handleMoveSelected} // ← 改為 () => void
+              onMove={handleMoveSelected}
               onUndo={onUndo}
               isLoading={
                 addMutation.isPending ||
@@ -615,7 +665,7 @@ export default function HomeClient() {
             />
           </section>
 
-          {/* 下：水平捲動的欄位 */}
+          {/* 下方內容 + 雙滑軌 */}
           <section className="space-y-3">
             <div className="flex justify-between">
               <div className="text-xl font-semibold">播放清單</div>
@@ -624,16 +674,28 @@ export default function HomeClient() {
               </Button>
             </div>
 
+            {/* Top scrollbar（同步） */}
+            <div
+              ref={topScrollRef}
+              onScroll={onTopScroll}
+              className="overflow-x-auto overflow-y-hidden h-4 mb-2"
+            >
+              <div style={{ width: contentWidth }} className="h-px" />
+            </div>
+
+            {/* Bottom scrollbar + 真實內容（同步） */}
             <div className="relative">
-              <div className="overflow-x-auto pb-2">
-                <div className="flex w-max gap-4">
+              <div
+                ref={bottomScrollRef}
+                onScroll={onBottomScroll}
+                className="overflow-x-auto pb-2"
+              >
+                <div ref={rowRef} className="flex w-max gap-4">
                   {columnsData.map((q, idx) => {
                     const pid = confirmedPlaylists[idx]?.id;
                     const playlist = confirmedPlaylists[idx];
-
                     if (!playlist) return null;
 
-                    // 載入/錯誤狀態
                     if (q.isLoading) {
                       return (
                         <div
