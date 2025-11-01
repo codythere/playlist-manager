@@ -18,6 +18,7 @@ import { Button } from "@/app/components/ui/button";
 import { Checkbox } from "@/app/components/ui/checkbox";
 import { ActionsToolbar } from "@/app/components/ActionsToolbar";
 import { ProgressToast } from "@/app/components/ProgressToast";
+import { useConfirm } from "@/app/components/confirm/ConfirmProvider";
 
 /* =========================
  * 型別與共用工具
@@ -169,11 +170,11 @@ function addToPlaylistCache(
       const existedIsTemp = existedByVid.playlistItemId.startsWith("temp-");
       // 若舊的是 temp、新的是「真實 item」→ 用真實 item 取代 temp
       if (incomingIsReal && existedIsTemp) {
-        byId.delete(existedByVid.playlistItemId); // 移除舊 temp
+        byId.delete(existedByVid.playlistItemId);
         byId.set(incoming.playlistItemId, incoming);
         byVid.set(incoming.videoId, incoming);
       }
-      // 否則代表同一支影片已存在（無論真實或 temp）→ 略過
+      // 否則代表同一支影片已存在 → 略過
       continue;
     }
 
@@ -237,6 +238,13 @@ function usePlaylists(enabled: boolean) {
     staleTime: 0,
     refetchOnMount: "always",
   });
+}
+
+/* -------------------------
+ * 🧮 配額格式化
+ * ------------------------- */
+function formatUnits(n: number) {
+  return new Intl.NumberFormat().format(n);
 }
 
 /* =========================
@@ -392,6 +400,7 @@ const MemoPlaylistColumn = React.memo(PlaylistColumn, (prev, next) => {
 export default function HomeClient() {
   const queryClient = useQueryClient();
   const [isPending, startTransition] = React.useTransition();
+  const confirm = useConfirm();
 
   /* ---- Auth ---- */
   const authQ = useQuery({
@@ -399,7 +408,7 @@ export default function HomeClient() {
     queryFn: fetchAuth,
     staleTime: 0,
     refetchOnMount: "always",
-    refetchOnWindowFocus: true, // ✅ 重新聚焦就重抓
+    refetchOnWindowFocus: true,
   });
   const auth = authQ.data;
 
@@ -481,7 +490,6 @@ export default function HomeClient() {
 
         found.push(...pageItems);
 
-        // 提前結束：已找到所有需要的 videoId
         const allFound = [...need].every((v: string) =>
           found.some((i: PlaylistItemSummary) => i.videoId === v)
         );
@@ -492,13 +500,12 @@ export default function HomeClient() {
 
         pageToken = data.nextPageToken ?? null;
         if (!pageToken) {
-          items = found; // 沒有更多頁
+          items = found;
           break;
         }
       } while (true);
     }
 
-    // 3) 只回傳需要的 pair（忽略沒找到的）
     return items
       .filter((i: PlaylistItemSummary) => need.has(i.videoId))
       .map((i: PlaylistItemSummary) => ({
@@ -595,7 +602,6 @@ export default function HomeClient() {
         body: JSON.stringify(payload),
       }),
 
-    // ⭐ 樂觀更新
     onMutate: async (variables) => {
       const { targetPlaylistId, videoIds } = variables;
 
@@ -605,7 +611,6 @@ export default function HomeClient() {
         queryKey: ["playlist-items", targetPlaylistId],
       });
 
-      // 蒐集 meta → 樂觀插入
       const metaByVideoId = new Map<string, PlaylistItemSummary>();
       columnsData.forEach((q) => {
         const data = q.data;
@@ -657,14 +662,12 @@ export default function HomeClient() {
     onSuccess: (_res, variables) => {
       setActionToast({ status: "success", label: "新增到播放清單" });
 
-      // ✅ 記錄可復原資訊
       setLastOp({
         type: "add",
         targetPlaylistId: variables.targetPlaylistId,
         videoIds: variables.videoIds,
       });
 
-      // ✅ 新增成功後，自動清空所有欄位的勾選
       startTransition(() => {
         setSelectedMap({});
       });
@@ -694,7 +697,6 @@ export default function HomeClient() {
         body: JSON.stringify(payload),
       }),
 
-    // ⭐ 樂觀更新
     onMutate: async (variables) => {
       const { sourcePlaylistId, playlistItemIds } = variables;
 
@@ -717,7 +719,6 @@ export default function HomeClient() {
 
       removeFromPlaylistCache(queryClient, sourcePlaylistId, playlistItemIds);
 
-      // 清該欄的選取狀態
       setSelectedMap((prev) => ({ ...prev, [sourcePlaylistId]: new Set() }));
 
       return { key, snapshot, sourcePlaylistId, backupRemoved };
@@ -732,7 +733,6 @@ export default function HomeClient() {
 
     onSuccess: (_res, _vars, ctx) => {
       setActionToast({ status: "success", label: "從清單移除" });
-      // ✅ 記錄可復原資訊（用 videoIds）
       const vids = (ctx?.backupRemoved ?? []).map((i) => i.videoId);
       if (vids.length) {
         setLastOp({
@@ -768,7 +768,6 @@ export default function HomeClient() {
         body: JSON.stringify(payload),
       }),
 
-    // ⭐ 雙邊樂觀（來源移除 + 目標加入暫時列）
     onMutate: async ({ sourcePlaylistId, targetPlaylistId, items }) => {
       setActionToast({ status: "loading", label: "一併移轉" });
 
@@ -825,7 +824,6 @@ export default function HomeClient() {
 
     onError: (_e, _vars, ctx) => {
       if (ctx) {
-        // 回滾來源
         if (ctx.backupSourceItems?.length) {
           const key = ["playlist-items", ctx.sourcePlaylistId] as const;
           const prev = queryClient.getQueryData<{
@@ -839,7 +837,6 @@ export default function HomeClient() {
             });
           }
         }
-        // 移除目標暫時列
         removeTempFromPlaylistCache(
           queryClient,
           ctx.targetPlaylistId,
@@ -851,7 +848,6 @@ export default function HomeClient() {
 
     onSuccess: (_res, vars, ctx) => {
       setActionToast({ status: "success", label: "一併移轉" });
-      // ✅ 記錄可復原資訊
       const vids = (ctx?.backupSourceItems ?? []).map((i) => i.videoId);
       if (vids.length) {
         setLastOp({
@@ -915,11 +911,15 @@ export default function HomeClient() {
 
   /* ---- 動作列 Callback ---- */
 
-  // 由 DDL 決定目標，不再使用 prompt
-  const handleAddSelected = (targetIdFromToolbar?: string | null) => {
+  // 由 DDL 決定目標，不再使用 prompt（UI 版一次確認）
+  const handleAddSelected = async (targetIdFromToolbar?: string | null) => {
     const to = (targetIdFromToolbar ?? targetPlaylistId) || null;
     if (!to) {
-      window.alert("請先在工具列的下拉選單選擇【目標播放清單】。");
+      await confirm({
+        title: "尚未選擇目標清單",
+        description: "請先在工具列上方的下拉選單選擇【目標播放清單】。",
+        infoOnly: true, // 只有「知道了」
+      });
       return;
     }
 
@@ -928,9 +928,26 @@ export default function HomeClient() {
 
     const targetName =
       allPlaylists.find((p) => p.id === to)?.title ?? `(ID: ${to})`;
-    const ok = window.confirm(
-      `確認要將已勾選的 ${allVideoIds.length} 部影片新增到「${targetName}」嗎？`
-    );
+    const units = allVideoIds.length * 50; // insert 估 50/部
+
+    const ok = await confirm({
+      title: "確認新增到播放清單",
+      description: (
+        <div className="space-y-1">
+          <div>
+            確認將已勾選的 <b>{allVideoIds.length}</b> 部影片新增到「
+            {targetName}
+            」？
+          </div>
+          <div className="text-xs text-muted-foreground">
+            預計消耗配額：<b>{formatUnits(units)}</b>
+          </div>
+        </div>
+      ),
+      confirmText: "確定新增",
+      cancelText: "取消",
+      variant: "destructive",
+    });
     if (!ok) return;
 
     addMutation.mutate({
@@ -940,11 +957,15 @@ export default function HomeClient() {
     });
   };
 
-  // 一併移轉（以 DDL 決定目標）
-  const handleMoveSelected = (targetIdFromToolbar?: string | null) => {
+  // ✅ 一併移轉：改為 UI 版一次確認 + 顯示配額
+  const handleMoveSelected = async (targetIdFromToolbar?: string | null) => {
     const to = (targetIdFromToolbar ?? targetPlaylistId) || null;
     if (!to) {
-      window.alert("請先在工具列的下拉選單選擇【目標播放清單】。");
+      await confirm({
+        title: "尚未選擇目標清單",
+        description: "請先在工具列上方的下拉選單選擇【目標播放清單】。",
+        infoOnly: true,
+      });
       return;
     }
 
@@ -953,9 +974,25 @@ export default function HomeClient() {
 
     const targetName =
       allPlaylists.find((p) => p.id === to)?.title ?? `(ID: ${to})`;
-    const ok = window.confirm(
-      `確認要將已勾選的 ${total} 部影片「一併移轉」到「${targetName}」嗎？`
-    );
+    const units = total * 100; // move 概算：delete 50 + insert 50
+
+    const ok = await confirm({
+      title: "確認一併移轉",
+      description: (
+        <div className="space-y-1">
+          <div>
+            確認要將已勾選的 <b>{total}</b> 部影片「一併移轉」到「{targetName}」
+            嗎？
+          </div>
+          <div className="text-xs text-muted-foreground">
+            預計消耗配額：<b>{formatUnits(units)}</b>
+          </div>
+        </div>
+      ),
+      confirmText: "確定移轉",
+      cancelText: "取消",
+      variant: "destructive",
+    });
     if (!ok) return;
 
     // 逐來源清單執行 move（可序列化送出）
@@ -978,7 +1015,33 @@ export default function HomeClient() {
     });
   };
 
-  const handleRemoveSelected = () => {
+  const handleRemoveSelected = async () => {
+    const toRemove = Object.entries(selectedMap).flatMap(([_, set]) =>
+      Array.from(set)
+    );
+    const total = toRemove.length;
+    if (total === 0) return;
+
+    const units = total * 50; // delete 估 50/部
+
+    const ok = await confirm({
+      title: "確認從清單移除",
+      description: (
+        <div className="space-y-1">
+          <div>
+            確認要從原清單移除 <b>{total}</b> 部影片？
+          </div>
+          <div className="text-xs text-muted-foreground">
+            預計消耗配額：<b>{formatUnits(units)}</b>
+          </div>
+        </div>
+      ),
+      confirmText: "確定移除",
+      cancelText: "取消",
+      variant: "destructive",
+    });
+    if (!ok) return;
+
     Object.entries(selectedMap).forEach(([sourcePlaylistId, set]) => {
       const ids = Array.from(set);
       if (ids.length > 0) {
@@ -993,14 +1056,62 @@ export default function HomeClient() {
 
   const onUndo = async () => {
     if (!lastOp) return;
+
+    let title = "確認復原";
+    let message: React.ReactNode = "確認要復原上一個操作嗎？";
+    let units = 0;
+
+    if (lastOp.type === "add") {
+      title = "復原：新增";
+      message = (
+        <>
+          確認復原「新增」，將 <b>{lastOp.videoIds.length}</b>{" "}
+          部影片自目標清單移除？
+        </>
+      );
+      units = lastOp.videoIds.length * 50; // delete
+    } else if (lastOp.type === "remove") {
+      title = "復原：移除";
+      message = (
+        <>
+          確認復原「移除」，將 <b>{lastOp.videoIds.length}</b>{" "}
+          部影片加回原清單？
+        </>
+      );
+      units = lastOp.videoIds.length * 50; // insert
+    } else if (lastOp.type === "move") {
+      title = "復原：一併移轉";
+      message = (
+        <>
+          確認復原「一併移轉」，將 <b>{lastOp.videoIds.length}</b>{" "}
+          部影片搬回原清單？
+        </>
+      );
+      units = lastOp.videoIds.length * 100; // delete + insert
+    }
+
+    const ok = await confirm({
+      title,
+      description: (
+        <div className="space-y-1">
+          <div>{message}</div>
+          <div className="text-xs text-muted-foreground">
+            預計消耗配額：<b>{formatUnits(units)}</b>
+          </div>
+        </div>
+      ),
+      confirmText: "確定復原",
+      cancelText: "取消",
+      variant: "destructive",
+    });
+    if (!ok) return;
+
     setActionToast({ status: "loading", label: "復原" });
 
-    // 小工具：延遲
     const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
     try {
       if (lastOp.type === "add") {
-        // 復原新增：從目標清單刪掉剛新增的影片（需要 itemId）
         const pairs = await findItemsInPlaylistByVideoIds(
           lastOp.targetPlaylistId,
           lastOp.videoIds
@@ -1018,7 +1129,6 @@ export default function HomeClient() {
           });
         }
 
-        // 強化同步：雙重 refetch
         await queryClient.invalidateQueries({
           queryKey: ["playlist-items", lastOp.targetPlaylistId],
         });
@@ -1035,8 +1145,6 @@ export default function HomeClient() {
 
         await queryClient.invalidateQueries({ queryKey: ["playlists"] });
       } else if (lastOp.type === "remove") {
-        // 復原移除：把影片加回原清單（需要 videoId）
-        // 先做「樂觀回填」避免 UI 少 1：以 temp-* 佔位
         const optimisticBackItems: PlaylistItemSummary[] = lastOp.videoIds.map(
           (vid) => ({
             playlistItemId: `temp-${vid}`,
@@ -1063,7 +1171,6 @@ export default function HomeClient() {
             }),
           });
         } catch (e) {
-          // 失敗回滾 temp
           removeTempFromPlaylistCache(
             queryClient,
             lastOp.sourcePlaylistId,
@@ -1072,7 +1179,6 @@ export default function HomeClient() {
           throw e;
         }
 
-        // 成功後：雙重 refetch 對齊最終狀態，並清理 temp（若仍存在）
         await queryClient.invalidateQueries({
           queryKey: ["playlist-items", lastOp.sourcePlaylistId],
         });
@@ -1087,7 +1193,6 @@ export default function HomeClient() {
           type: "active",
         });
 
-        // 清 temp（通常 refetch 後會被真實 item 取代，但保險再清一次）
         removeTempFromPlaylistCache(
           queryClient,
           lastOp.sourcePlaylistId,
@@ -1096,7 +1201,6 @@ export default function HomeClient() {
 
         await queryClient.invalidateQueries({ queryKey: ["playlists"] });
       } else if (lastOp.type === "move") {
-        // 復原移轉：把影片從 target 搬回 source（需要 {playlistItemId, videoId}）
         const pairs = await findItemsInPlaylistByVideoIds(
           lastOp.targetPlaylistId,
           lastOp.videoIds
@@ -1113,7 +1217,6 @@ export default function HomeClient() {
           });
         }
 
-        // 兩側都做雙重 refetch
         await Promise.all([
           queryClient.invalidateQueries({
             queryKey: ["playlist-items", lastOp.sourcePlaylistId],
@@ -1149,7 +1252,6 @@ export default function HomeClient() {
       }
 
       setActionToast({ status: "success", label: "復原" });
-      // 若你有 lastOp 的 state：清掉它（單步復原）
       setLastOp?.(null);
     } catch (_err) {
       setActionToast({ status: "error", label: "復原" });
@@ -1256,7 +1358,6 @@ export default function HomeClient() {
       </div>
     );
   }
-  // ✅ 只看 authenticated
   if (!auth.authenticated) {
     return (
       <div className="mx-auto max-w-2xl space-y-4 rounded-lg border bg-card p-6 shadow-sm">
@@ -1353,11 +1454,9 @@ export default function HomeClient() {
               onMove={(tid?: string | null) => handleMoveSelected(tid)}
               onUndo={onUndo}
               estimatedQuota={estimatedQuota}
-              /* ✅ 進階版：各自 loading */
               addLoading={addMutation.isPending}
               removeLoading={removeMutation.isPending}
               moveLoading={moveMutation.isPending}
-              /* ✅ 有上一個成功操作才可 Undo */
               canUndo={Boolean(lastOp)}
             />
           </section>

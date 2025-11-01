@@ -4,6 +4,7 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { AppShell } from "./components/AppShell";
 import { Footer } from "./components/Footer";
+import { ConfirmProvider } from "./components/confirm/ConfirmProvider";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({
@@ -30,8 +31,10 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} bg-background text-foreground antialiased`}
       >
         <Providers>
-          {/* 將 Footer 當作 slot 傳入，確保貼底 */}
-          <AppShell footer={<Footer />}>{children}</AppShell>
+          <ConfirmProvider>
+            {/* 將 Footer 當作 slot 傳入，確保貼底 */}
+            <AppShell footer={<Footer />}>{children}</AppShell>
+          </ConfirmProvider>
         </Providers>
       </body>
     </html>

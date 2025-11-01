@@ -1,9 +1,35 @@
 // /app/components/ActionsToolbar.tsx
 "use client";
+
 import * as React from "react";
 import { Button } from "@/app/components/ui/button";
 import type { PlaylistSummary } from "@/types/youtube";
-import { Loader2 } from "lucide-react";
+import {
+  Loader2,
+  Check,
+  ChevronsUpDown,
+  ListPlus,
+  MoveRight,
+  Undo2,
+  Trash2,
+  ListVideo,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+
+// ⬇️ shadcn/ui 組件（需要已安裝）
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/app/components/ui/popover";
+import {
+  Command,
+  CommandInput,
+  CommandEmpty,
+  CommandList,
+  CommandGroup,
+  CommandItem,
+} from "@/app/components/ui/command";
 
 export interface ActionsToolbarProps {
   selectedCount: number;
@@ -46,69 +72,105 @@ export function ActionsToolbar(props: ActionsToolbarProps) {
     onRemove,
     onMove,
     onUndo,
-    isLoading,
-    estimatedQuota,
-    addLoading,
-    removeLoading,
-    moveLoading,
-    canUndo,
   } = props;
 
-  // 非受控：自己保留目標值
+  const busyAll = Boolean(props.isLoading);
+  const addBusy = Boolean(props.addLoading) || busyAll;
+  const removeBusy = Boolean(props.removeLoading) || busyAll;
+  const moveBusy = Boolean(props.moveLoading) || busyAll;
+
+  const nothingSelected = selectedCount === 0;
+
+  // 非受控本地狀態（若父層沒提供 selectedPlaylistId 時使用）
   const [localTargetId, setLocalTargetId] = React.useState<string | null>(null);
 
-  // 若父層有提供 selectedPlaylistId，則視為受控值；否則用自己的
+  // 受控 / 非受控合併值
   const currentTargetId =
     typeof selectedPlaylistId !== "undefined"
       ? selectedPlaylistId
       : localTargetId;
 
-  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const v = e.target.value || null;
-    if (onTargetChange) onTargetChange(v);
-    else setLocalTargetId(v);
+  // Combobox popover
+  const [open, setOpen] = React.useState(false);
+
+  // 下拉在新增/移轉進行中鎖住，避免途中換目標
+  const targetDisabled = addBusy || moveBusy;
+
+  const handleChange = (id: string | null) => {
+    if (onTargetChange) onTargetChange(id);
+    else setLocalTargetId(id);
   };
 
-  // 全域忙碌（相容舊版）
-  const busyAll = Boolean(isLoading);
-
-  // ✅ 各鍵最終狀態（個別優先 → 退回全域）
-  const addBusy = Boolean(addLoading) || busyAll;
-  const removeBusy = Boolean(removeLoading) || busyAll;
-  const moveBusy = Boolean(moveLoading) || busyAll;
-
-  // 共用禁用條件
-  const nothingSelected = selectedCount === 0;
-
-  // 目標清單下拉：新增/移轉進行中時鎖住，避免操作中途改目標
-  const targetDisabled = addBusy || moveBusy;
+  const currentTitle =
+    playlists.find((p) => p.id === currentTargetId)?.title ??
+    "選擇目標播放清單";
 
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-3">
-      <div className="text-sm">
-        已勾選：<b>{selectedCount}</b> 部影片{" "}
-        {typeof estimatedQuota === "number" ? (
+      <div className="flex items-center gap-2 text-sm">
+        <ListVideo className="h-4 w-4 opacity-70" />
+        已勾選：<b>{selectedCount}</b> 部影片
+        {typeof props.estimatedQuota === "number" ? (
           <span className="text-muted-foreground">
-            （估算配額 {estimatedQuota}）
+            （估算配額 {props.estimatedQuota}）
           </span>
         ) : null}
       </div>
 
       <div className="flex items-center gap-2">
-        <select
-          className="border rounded px-2 py-1 text-sm"
-          value={currentTargetId ?? ""}
-          onChange={handleSelectChange}
-          disabled={targetDisabled}
-          aria-label="目標播放清單"
-        >
-          <option value="">選擇目標播放清單</option>
-          {playlists.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.title}
-            </option>
-          ))}
-        </select>
+        {/* 美化後的可搜尋 DDL（Combobox） */}
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              size="sm"
+              role="combobox"
+              aria-expanded={open}
+              aria-label="目標播放清單"
+              disabled={targetDisabled || playlists.length === 0}
+              className={cn(
+                "w-[260px] justify-between",
+                !currentTargetId && "text-muted-foreground"
+              )}
+              title={currentTitle}
+            >
+              <span className="truncate">{currentTitle}</span>
+              <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-60" />
+            </Button>
+          </PopoverTrigger>
+
+          <PopoverContent className="w-[320px] p-0" align="start">
+            <Command>
+              <CommandInput placeholder="搜尋播放清單..." />
+              <CommandEmpty>找不到相符的播放清單</CommandEmpty>
+              <CommandList>
+                <CommandGroup heading="全部播放清單">
+                  {playlists.map((p) => (
+                    <CommandItem
+                      key={p.id}
+                      value={p.title + " " + p.id}
+                      onSelect={() => {
+                        const next = p.id === currentTargetId ? null : p.id;
+                        handleChange(next);
+                        // 選擇後自動關閉彈窗
+                        setOpen(false);
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <Check
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          currentTargetId === p.id ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      <span className="truncate">{p.title}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
 
         {/* 新增到清單（需選目標且有勾選） */}
         <Button
@@ -124,7 +186,10 @@ export function ActionsToolbar(props: ActionsToolbarProps) {
               新增中…
             </>
           ) : (
-            "新增到清單"
+            <>
+              <ListPlus className="mr-2 h-4 w-4" />
+              新增到清單
+            </>
           )}
         </Button>
 
@@ -142,7 +207,10 @@ export function ActionsToolbar(props: ActionsToolbarProps) {
               移除中…
             </>
           ) : (
-            "從原清單移除"
+            <>
+              <Trash2 className="mr-2 h-4 w-4" />
+              從原清單移除
+            </>
           )}
         </Button>
 
@@ -159,7 +227,10 @@ export function ActionsToolbar(props: ActionsToolbarProps) {
               移轉中…
             </>
           ) : (
-            "一併移轉"
+            <>
+              <MoveRight className="mr-2 h-4 w-4" />
+              一併移轉
+            </>
           )}
         </Button>
 
@@ -167,11 +238,12 @@ export function ActionsToolbar(props: ActionsToolbarProps) {
         <Button
           size="sm"
           variant="ghost"
-          onClick={onUndo}
-          disabled={busyAll || !canUndo}
-          aria-disabled={busyAll || !canUndo}
-          title={canUndo ? "復原上一個動作" : "暫無可復原的動作"}
+          onClick={props.onUndo}
+          disabled={busyAll || !props.canUndo}
+          aria-disabled={busyAll || !props.canUndo}
+          title={props.canUndo ? "復原上一個動作" : "暫無可復原的動作"}
         >
+          <Undo2 className="mr-2 h-4 w-4" />
           復原
         </Button>
       </div>
