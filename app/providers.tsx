@@ -12,9 +12,21 @@ export function Providers({ children }: { children: React.ReactNode }) {
       new QueryClient({
         defaultOptions: {
           queries: {
-            refetchOnMount: "always",
-            refetchOnWindowFocus: true,
-            staleTime: 0,
+            /**
+             * ✅ 全域止血：避免背景自動重撈
+             * - 不因為視窗聚焦/網路恢復而重撈
+             * - 不在第一次 mount 就強制重撈（各 query 視需要再覆寫）
+             * - 提高 staleTime，降低不必要 request
+             */
+            refetchOnMount: false,
+            refetchOnWindowFocus: false,
+            refetchOnReconnect: false,
+            retry: 1,
+            staleTime: 5 * 60_000, // 5 分鐘內視為新鮮
+            gcTime: 30 * 60_000, // 30 分鐘回收 cache
+          },
+          mutations: {
+            retry: 0,
           },
         },
       })

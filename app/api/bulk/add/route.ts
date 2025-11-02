@@ -11,10 +11,10 @@ import { logger } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
-// 與 move/remove 共用的 userId 解析：先走 requireUserId(req)，失敗再從 cookies() 讀
+// 與 move/remove 共用的 userId 解析
 async function getUserIdFromRequest(req: NextRequest): Promise<string | null> {
   try {
-    const u = await requireUserId(req as any); // ✅ 記得 await
+    const u = await requireUserId(req as any);
     if (u?.userId) return u.userId;
   } catch {}
   try {
@@ -43,13 +43,13 @@ export async function POST(request: NextRequest) {
   }
   const payload = parsed.data;
 
-  // 2) 解析 userId（⚠️ 這裡一定要 await）
+  // 2) 解析 userId
   const userId = await getUserIdFromRequest(request);
   if (!userId) {
     return jsonError("unauthorized", "Sign in to continue", { status: 401 });
   }
 
-  // 3) 先檢查 DB 內是否真的有 token（避免進到 service 才 fallback）
+  // 3) 先檢查 DB 內是否真的有 token
   const tokens = await getUserTokens(userId);
   if (!tokens || (!tokens.access_token && !tokens.refresh_token)) {
     logger.warn({ userId }, "[bulk/add] no tokens");
@@ -69,6 +69,7 @@ export async function POST(request: NextRequest) {
   if (idempotencyKey && checkIdempotencyKey(idempotencyKey)) {
     const summary = getActionSummary(idempotencyKey);
     if (summary && summary.action.userId === userId) {
+      // 回傳快取的 summary + 估算配額（僅顯示用）
       return jsonOk({
         ...summary,
         estimatedQuota: payload.videoIds.length * 50,
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // 5) 執行
+  // 5) 執行（精準配額由 performBulkAdd 內部以 withQuota 記錄）
   const result = await performBulkAdd(payload, {
     userId,
     actionId: idempotencyKey,

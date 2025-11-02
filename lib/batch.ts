@@ -61,7 +61,10 @@ export async function runInBatches<T, R>(
   options: BatchOptions<T> = {}
 ): Promise<BatchResult<R>> {
   const batchSize = options.batchSize ?? DEFAULT_BATCH_SIZE;
-  const concurrency = Math.min(options.concurrency ?? DEFAULT_CONCURRENCY, items.length || 1);
+  const concurrency = Math.min(
+    options.concurrency ?? DEFAULT_CONCURRENCY,
+    items.length || 1
+  );
   const retryCodes = options.retryCodes ?? DEFAULT_RETRY_CODES;
 
   const values: Array<R | undefined> = new Array(items.length);

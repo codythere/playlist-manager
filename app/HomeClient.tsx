@@ -19,6 +19,7 @@ import { Checkbox } from "@/app/components/ui/checkbox";
 import { ActionsToolbar } from "@/app/components/ActionsToolbar";
 import { ProgressToast } from "@/app/components/ProgressToast";
 import { useConfirm } from "@/app/components/confirm/ConfirmProvider";
+import { useQuota } from "@/app/hooks/useQuota";
 
 /* =========================
  * 型別與共用工具
@@ -230,13 +231,17 @@ function removeFromPlaylistCache(
   queryClient.setQueryData(key, next);
 }
 
+/** ✅ 撈播放清單：改成溫和預設，避免自動重撈 */
 function usePlaylists(enabled: boolean) {
   return useQuery({
     queryKey: ["playlists"],
     queryFn: () => apiRequest<PlaylistsPayload>("/api/playlists"),
     enabled,
-    staleTime: 0,
-    refetchOnMount: "always",
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: 5 * 60_000,
+    gcTime: 30 * 60_000,
   });
 }
 
@@ -406,11 +411,21 @@ export default function HomeClient() {
   const authQ = useQuery({
     queryKey: ["auth"],
     queryFn: fetchAuth,
-    staleTime: 0,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
+    /**
+     * ✅ 避免 auth 狀態在視窗聚焦時重撈，導致下游跟著 refetch
+     */
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: 5 * 60_000,
   });
   const auth = authQ.data;
+
+  /* ✅ 今日配額（需登入才啟用） */
+  const quotaQ = useQuota(Boolean(auth && auth.authenticated));
+  const todayRemaining = quotaQ.data?.todayRemaining ?? undefined;
+  const todayBudget = quotaQ.data?.todayBudget ?? undefined;
+  const quotaResetAtISO = quotaQ.data?.resetAtISO ?? undefined;
 
   /* ---- 取得播放清單 ---- */
   const playlistsQ = usePlaylists(
@@ -567,9 +582,18 @@ export default function HomeClient() {
         }));
         return { playlist: p, items };
       },
+      /**
+       * ✅ 關鍵：避免背景自動重撈
+       */
       enabled: view === "manage-items",
-      staleTime: 0,
-      refetchOnMount: "always",
+      refetchOnMount: false,
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
+      refetchInterval: false,
+      staleTime: 5 * 60_000,
+      gcTime: 30 * 60_000,
+      keepPreviousData: true,
+      retry: 1,
     })),
   });
 
@@ -1458,6 +1482,9 @@ export default function HomeClient() {
               removeLoading={removeMutation.isPending}
               moveLoading={moveMutation.isPending}
               canUndo={Boolean(lastOp)}
+              todayRemaining={todayRemaining}
+              todayBudget={todayBudget}
+              quotaResetAtISO={quotaResetAtISO}
             />
           </section>
 

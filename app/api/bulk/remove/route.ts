@@ -1,4 +1,4 @@
-// app/api/bulk/remove/route.ts
+// /app/api/bulk/remove/route.ts
 import type { NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import { jsonError, jsonOk } from "@/lib/result";
@@ -11,33 +11,26 @@ import { logger } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
-/** 只取 userId（字串），避免型別不合 */
 async function getUserIdFromRequest(req: NextRequest): Promise<string | null> {
-  // 1) 先走你現有的 requireUserId（會回 { userId, email } | null）
   try {
     const u = await requireUserId(req as any);
-    if (u?.userId) return u.userId; // ✅ 取字串，不回物件
+    if (u?.userId) return u.userId;
   } catch {}
-
-  // 2) 保底：直接從 headers cookies() 解析 ytpm_session
   try {
-    const store = await cookies(); // 你的專案型別下是 Promise
+    const store = await cookies();
     const raw = store.get("ytpm_session")?.value;
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed?.userId) return String(parsed.userId);
     }
   } catch {}
-
-  // 3) 若有自訂 header（測試用）
   const hdr = req.headers.get("x-user-id");
   if (hdr) return hdr;
-
   return null;
 }
 
 export async function POST(request: NextRequest) {
-  // ---- 讀 body ----
+  // 1) 讀 body
   let body: unknown;
   try {
     body = await request.json();
@@ -45,20 +38,19 @@ export async function POST(request: NextRequest) {
     return jsonError("invalid_request", "Invalid JSON body", { status: 400 });
   }
 
-  // ---- 驗證 payload ----
   const parsed = bulkRemoveSchema.safeParse(body);
   if (!parsed.success) {
     return jsonError("invalid_request", parsed.error.message, { status: 400 });
   }
   const payload = parsed.data;
 
-  // ---- userId from cookie/session ----
+  // 2) 解析 userId
   const userId = await getUserIdFromRequest(request);
   if (!userId) {
     return jsonError("unauthorized", "Sign in to continue", { status: 401 });
   }
 
-  // ---- 先檢查 tokens 是否存在（避免進 service 才 fallback）----
+  // 3) 確認 token 存在
   const tokens = await getUserTokens(userId);
   if (!tokens || (!tokens.access_token && !tokens.refresh_token)) {
     logger.warn({ userId }, "[bulk/remove] no tokens");
@@ -69,7 +61,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // ---- 冪等鍵 ----
+  // 4) 冪等鍵
   const idemKey =
     request.headers.get("idempotency-key") ??
     payload.idempotencyKey ??
@@ -80,13 +72,14 @@ export async function POST(request: NextRequest) {
     if (summary && summary.action.userId === userId) {
       return jsonOk({
         ...summary,
+        // 顯示用估算（delete 50/部）
         estimatedQuota: payload.playlistItemIds.length * 50,
         idempotent: true,
       });
     }
   }
 
-  // ---- 執行 ----
+  // 5) 執行（精準配額由 performBulkRemove 內部以 withQuota 記錄）
   const result = await performBulkRemove(payload, {
     userId,
     actionId: idemKey,

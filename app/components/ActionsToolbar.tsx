@@ -13,6 +13,7 @@ import {
   Undo2,
   Trash2,
   ListVideo,
+  Gauge,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -60,6 +61,15 @@ export interface ActionsToolbarProps {
 
   /** ✅ 是否可復原（控制 Undo 按鈕啟用） */
   canUndo?: boolean;
+
+  /** ✅ 今日配額訊息（可選） */
+  todayRemaining?: number;
+  todayBudget?: number;
+  quotaResetAtISO?: string;
+}
+
+function formatUnits(n: number) {
+  return new Intl.NumberFormat().format(n);
 }
 
 export function ActionsToolbar(props: ActionsToolbarProps) {
@@ -105,6 +115,13 @@ export function ActionsToolbar(props: ActionsToolbarProps) {
     playlists.find((p) => p.id === currentTargetId)?.title ??
     "選擇目標播放清單";
 
+  const showQuota =
+    typeof props.todayRemaining === "number" &&
+    typeof props.todayBudget === "number";
+  const remain = props.todayRemaining ?? 0;
+  const budget = props.todayBudget ?? 0;
+  const percent = budget > 0 ? Math.round((remain / budget) * 100) : 0;
+
   return (
     <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-3">
       <div className="flex items-center gap-2 text-sm">
@@ -112,12 +129,32 @@ export function ActionsToolbar(props: ActionsToolbarProps) {
         已勾選：<b>{selectedCount}</b> 部影片
         {typeof props.estimatedQuota === "number" ? (
           <span className="text-muted-foreground">
-            （估算配額 {props.estimatedQuota}）
+            （估算配額 {formatUnits(props.estimatedQuota)}）
           </span>
         ) : null}
       </div>
 
-      <div className="flex items-center gap-2">
+      {/* 今日配額顯示 */}
+      {showQuota && (
+        <div
+          className="ml-auto flex items-center gap-2 rounded-md border px-2 py-1 text-xs"
+          title={
+            props.quotaResetAtISO
+              ? `今日剩餘：${formatUnits(remain)} / ${formatUnits(
+                  budget
+                )}，重置時間：${props.quotaResetAtISO}`
+              : `今日剩餘：${formatUnits(remain)} / ${formatUnits(budget)}`
+          }
+        >
+          <Gauge className="h-3.5 w-3.5 opacity-70" />
+          <span className="whitespace-nowrap">
+            今日剩餘：<b>{formatUnits(remain)}</b> / {formatUnits(budget)}（
+            {percent}%）
+          </span>
+        </div>
+      )}
+
+      <div className={cn("flex items-center gap-2", !showQuota && "ml-auto")}>
         {/* 美化後的可搜尋 DDL（Combobox） */}
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>

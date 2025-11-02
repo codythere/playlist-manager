@@ -1,18 +1,47 @@
-// app/api/playlist-items/route.ts
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getYouTubeClient } from "@/lib/google";
+import { METHOD_COST, recordQuota } from "@/lib/quota";
+import { youtube_v3 } from "googleapis";
+
+type PlaylistItemsListResp = Awaited<
+  ReturnType<youtube_v3.Resource$Playlistitems["list"]>
+>;
+
+function mapYouTubeErrorToHttp(err: any): { status: number; message: string } {
+  const msg =
+    err?.response?.data?.error?.message ||
+    err?.errors?.[0]?.message ||
+    err?.message ||
+    "YouTube API error";
+
+  const reason =
+    err?.response?.data?.error?.errors?.[0]?.reason || err?.errors?.[0]?.reason;
+
+  if (reason === "quotaExceeded" || reason === "rateLimitExceeded") {
+    return { status: 429, message: msg };
+  }
+  if (
+    reason === "insufficientPermissions" ||
+    reason === "forbidden" ||
+    reason === "youtubeSignupRequired"
+  ) {
+    return { status: 403, message: msg };
+  }
+  if (reason === "playlistNotFound" || reason === "notFound") {
+    return { status: 404, message: msg };
+  }
+  if (reason === "authError" || reason === "invalidCredentials") {
+    return { status: 401, message: msg };
+  }
+  return { status: 500, message: msg };
+}
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const playlistId = url.searchParams.get("playlistId");
   const pageTokenFromQuery = url.searchParams.get("pageToken") ?? undefined;
 
-  // 控制行為：
-  // - all=true|1       -> 強制抓完整清單（忽略 pageToken）
-  // - all=false|0      -> 僅抓單頁（可搭配 pageToken）
-  // - 未帶 all 且未帶 pageToken -> 預設抓完整清單
-  // - 未帶 all 但有 pageToken -> 僅抓單頁
   const allParam = url.searchParams.get("all");
   const forceFetchAll =
     allParam === "1" ||
@@ -23,7 +52,6 @@ export async function GET(request: Request) {
     allParam?.toLowerCase() === "false" ||
     (!!pageTokenFromQuery && allParam !== "1");
 
-  // 可選：限制總抓取數量（避免極大清單）；預設無上限
   const limitParam = url.searchParams.get("limit");
   const hardLimit = limitParam
     ? Math.max(0, Number(limitParam)) || Infinity
@@ -61,31 +89,40 @@ export async function GET(request: Request) {
   }
 
   try {
-    // 單頁模式（保留原行為）
     if (forceSinglePage && !forceFetchAll) {
+      // --- 單頁模式 ---
       const res = await yt.playlistItems.list({
         part: ["snippet", "contentDetails"],
         playlistId,
         maxResults: 50,
         pageToken: pageTokenFromQuery,
       });
+      recordQuota(
+        "playlistItems.list",
+        METHOD_COST["playlistItems.list"],
+        userId
+      ); // ★ 記一筆
 
-      const items = (res.data.items ?? []).map((it) => ({
-        id: it.id!, // playlistItemId
-        videoId: it.contentDetails?.videoId ?? "",
-        title: it.snippet?.title ?? "",
-        position:
-          typeof it.snippet?.position === "number"
-            ? it.snippet!.position!
-            : null,
-        channelTitle:
-          it.snippet?.videoOwnerChannelTitle ?? it.snippet?.channelTitle ?? "",
-        thumbnails: it.snippet?.thumbnails ?? null,
-        publishedAt:
-          it.contentDetails?.videoPublishedAt ??
-          it.snippet?.publishedAt ??
-          null,
-      }));
+      const items = (res.data.items ?? []).map(
+        (it: youtube_v3.Schema$PlaylistItem) => ({
+          id: it.id!,
+          videoId: it.contentDetails?.videoId ?? "",
+          title: it.snippet?.title ?? "",
+          position:
+            typeof it.snippet?.position === "number"
+              ? it.snippet.position!
+              : null,
+          channelTitle:
+            it.snippet?.videoOwnerChannelTitle ??
+            it.snippet?.channelTitle ??
+            "",
+          thumbnails: it.snippet?.thumbnails ?? null,
+          publishedAt:
+            it.contentDetails?.videoPublishedAt ??
+            it.snippet?.publishedAt ??
+            null,
+        })
+      );
 
       return NextResponse.json({
         items,
@@ -94,8 +131,7 @@ export async function GET(request: Request) {
       });
     }
 
-    // 一次抓完整個播放清單（自動翻頁）
-    let nextPageToken: string | undefined = undefined;
+    let nextPageToken: string | undefined = pageTokenFromQuery;
     let totalFetched = 0;
     const allItems: Array<{
       id: string;
@@ -107,9 +143,6 @@ export async function GET(request: Request) {
       publishedAt: string | null;
     }> = [];
 
-    // 若 query 已帶 pageToken，但 all=true，則從該 pageToken 起抓到最後
-    nextPageToken = pageTokenFromQuery;
-
     do {
       const res = await yt.playlistItems.list({
         part: ["snippet", "contentDetails"],
@@ -117,31 +150,37 @@ export async function GET(request: Request) {
         maxResults: 50,
         pageToken: nextPageToken,
       });
+      recordQuota(
+        "playlistItems.list",
+        METHOD_COST["playlistItems.list"],
+        userId
+      ); // ★ 每頁記一筆
 
-      const batch = (res.data.items ?? []).map((it) => ({
-        id: it.id!, // playlistItemId
-        videoId: it.contentDetails?.videoId ?? "",
-        title: it.snippet?.title ?? "",
-        position:
-          typeof it.snippet?.position === "number"
-            ? it.snippet!.position!
-            : null,
-        channelTitle:
-          it.snippet?.videoOwnerChannelTitle ?? it.snippet?.channelTitle ?? "",
-        thumbnails: it.snippet?.thumbnails ?? null,
-        publishedAt:
-          it.contentDetails?.videoPublishedAt ??
-          it.snippet?.publishedAt ??
-          null,
-      }));
+      const batch = (res.data.items ?? []).map(
+        (it: youtube_v3.Schema$PlaylistItem) => ({
+          id: it.id!,
+          videoId: it.contentDetails?.videoId ?? "",
+          title: it.snippet?.title ?? "",
+          position:
+            typeof it.snippet?.position === "number"
+              ? it.snippet.position!
+              : null,
+          channelTitle:
+            it.snippet?.videoOwnerChannelTitle ??
+            it.snippet?.channelTitle ??
+            "",
+          thumbnails: it.snippet?.thumbnails ?? null,
+          publishedAt:
+            it.contentDetails?.videoPublishedAt ??
+            it.snippet?.publishedAt ??
+            null,
+        })
+      );
 
       allItems.push(...batch);
       totalFetched += batch.length;
-
-      // 依 YouTube 回傳決定是否繼續
       nextPageToken = res.data.nextPageToken ?? undefined;
 
-      // 觸達限制就提早結束（避免極端大清單或意外迴圈）
       if (totalFetched >= hardLimit) {
         nextPageToken = undefined;
         break;
@@ -150,18 +189,19 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       items: allItems,
-      nextPageToken: null, // 已抓完所有頁
+      nextPageToken: null,
       usingMock: false,
     });
   } catch (err: any) {
-    // 友善錯誤回傳，便於前端顯示
-    const message =
-      err?.response?.data?.error?.message ||
-      err?.message ||
-      "Failed to fetch playlist items";
+    console.error("[playlist-items] YouTube error:", {
+      message: err?.message,
+      response: err?.response?.data,
+      errors: err?.errors,
+    });
+    const { status, message } = mapYouTubeErrorToHttp(err);
     return NextResponse.json(
       { ok: false, error: { code: "youtube_error", message } },
-      { status: 500 }
+      { status }
     );
   }
 }

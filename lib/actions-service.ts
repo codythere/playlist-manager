@@ -1,4 +1,4 @@
-// lib/actions-service.ts（只貼 performBulkMove，其他維持原狀）
+// lib/actions-service.ts
 import { nanoid } from "nanoid";
 import { logger } from "./logger";
 import { getYouTubeClient } from "./google";
@@ -26,6 +26,8 @@ import type {
   // 如果你的 validators/bulk 沒有匯出 BulkRemovePayload，就暫時用下面的 fallback 型別
   BulkRemovePayload,
 } from "@/validators/bulk";
+
+import { recordQuota, METHOD_COST } from "@/lib/quota";
 
 export interface OperationResult {
   action: ActionRecord;
@@ -153,6 +155,13 @@ export async function performBulkMove(
   const insertedSucceeded: typeof items = [];
   for (const item of items) {
     try {
+      // ★ 實際呼叫前就扣配額（重試會再次扣，符合實際 API 消耗）
+      recordQuota(
+        "playlistItems.insert",
+        METHOD_COST["playlistItems.insert"],
+        options.userId
+      );
+
       const resp = await retryTransient(() =>
         client.playlistItems.insert({
           part: ["snippet"],
@@ -198,6 +207,13 @@ export async function performBulkMove(
       continue;
     }
     try {
+      // ★ 刪除前扣配額
+      recordQuota(
+        "playlistItems.delete",
+        METHOD_COST["playlistItems.delete"],
+        options.userId
+      );
+
       await retryTransient(() =>
         client.playlistItems.delete({ id: item.sourcePlaylistItemId! })
       );
@@ -311,6 +327,13 @@ export async function performBulkRemove(
     }
 
     try {
+      // ★ 刪除前扣配額
+      recordQuota(
+        "playlistItems.delete",
+        METHOD_COST["playlistItems.delete"],
+        options.userId
+      );
+
       await retryTransient(() =>
         client.playlistItems.delete({ id: it.sourcePlaylistItemId! })
       );
@@ -323,9 +346,6 @@ export async function performBulkRemove(
       if (isIdempotentNotFound(parsed.code, parsed.message)) {
         updateActionItem(it.id, {
           status: "success",
-          // 若你想保留診斷，可留個備註欄位（沒有就略過）
-          // errorCode: "ALREADY_REMOVED",
-          // errorMessage: parsed.message || "Item already removed",
         });
         logger.info(
           { itemId: it.id, playlistItemId: it.sourcePlaylistItemId },
@@ -412,6 +432,13 @@ export async function performBulkAdd(
   // 有 client → 逐筆序列化 insert + 重試（避免偶發 409/Service Unavailable）
   for (const it of items) {
     try {
+      // ★ 插入前扣配額
+      recordQuota(
+        "playlistItems.insert",
+        METHOD_COST["playlistItems.insert"],
+        options.userId
+      );
+
       const resp = await retryTransient(() =>
         client.playlistItems.insert({
           part: ["snippet"],
