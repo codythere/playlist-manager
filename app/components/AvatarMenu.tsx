@@ -2,7 +2,6 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +12,11 @@ import {
 import { Avatar } from "@/app/components/ui/avatar";
 import { LogOut, Settings, User } from "lucide-react";
 
+/**
+ * 說明：
+ * - 取消 client 端 router.replace，避免和其他地方（middleware/頁面守衛）重複跳轉。
+ * - 採用整頁跳轉到 /api/auth/logout?next=...，讓伺服器進行「唯一一次」redirect。
+ */
 export function AvatarMenu({
   user,
   redirectTo = "/login",
@@ -20,15 +24,18 @@ export function AvatarMenu({
   user?: { name?: string | null; email?: string | null; image?: string | null };
   redirectTo?: string;
 }) {
-  const router = useRouter();
   const [loading, setLoading] = React.useState(false);
 
   const onLogout = async () => {
     try {
       setLoading(true);
-      await fetch("/api/auth/logout", { method: "POST" });
-      router.replace(redirectTo);
+      // 直接整頁導向到 GET /api/auth/logout，由伺服器統一處理 redirect
+      const next = redirectTo || "/login";
+      window.location.href = `/api/auth/logout?next=${encodeURIComponent(
+        next
+      )}`;
     } finally {
+      // 通常不會看到這一行（因為整頁跳轉），保留以防 SPA 情境下的中斷
       setLoading(false);
     }
   };
@@ -55,17 +62,11 @@ export function AvatarMenu({
         </div>
         <DropdownMenuSeparator />
 
-        <DropdownMenuItem
-          disabled={true}
-          onClick={() => router.push("/profile")}
-        >
+        <DropdownMenuItem disabled onClick={() => {}}>
           <User className="mr-2 h-4 w-4" /> Profile
         </DropdownMenuItem>
 
-        <DropdownMenuItem
-          disabled={true}
-          onClick={() => router.push("/settings")}
-        >
+        <DropdownMenuItem disabled onClick={() => {}}>
           <Settings className="mr-2 h-4 w-4" /> Settings
         </DropdownMenuItem>
 

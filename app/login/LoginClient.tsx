@@ -32,7 +32,7 @@ export default function LoginClient({
   };
 
   return (
-    <div className="min-h-dvh grid place-items-center px-6">
+    <div className="grid place-items-center px-6 pt-[120px]">
       <div className="w-full max-w-sm rounded-2xl border bg-card p-6 shadow-sm">
         {/* Logo + Title */}
         <div className="mb-6 flex items-center gap-2">
@@ -73,13 +73,13 @@ export default function LoginClient({
             ) : (
               <span className="inline-flex items-center gap-2">
                 {/* 你可以換成自己的 SVG，這裡用 next/image 引入本地圖檔亦可 */}
-                <Image
+                {/* <Image
                   src="/google.svg"
                   alt=""
                   width={24}
                   height={24}
                   aria-hidden
-                />
+                /> */}
                 Sign in with Google
               </span>
             )}

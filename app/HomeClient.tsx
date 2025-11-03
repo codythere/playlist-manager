@@ -1295,6 +1295,17 @@ export default function HomeClient() {
     mutationFn: () =>
       apiRequest<{ success: boolean }>("/api/auth/logout", { method: "POST" }),
     onSuccess: () => {
+      // 先把快取設成未登入（立即更新 Header）
+      queryClient.setQueryData(["auth"], {
+        authenticated: false,
+        userId: null,
+        email: null,
+        usingMock: false,
+      });
+
+      // 廣播事件，讓其它地方（如果有）也能同步
+      window.dispatchEvent(new Event("ytpm:auth-changed"));
+
       queryClient.invalidateQueries({ queryKey: ["auth"] });
       queryClient.invalidateQueries({ queryKey: ["playlists"] });
       setCheckedPlaylistIds(new Set());

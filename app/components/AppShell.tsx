@@ -16,6 +16,7 @@ import {
   SheetTitle,
 } from "@/app/components/ui/sheet";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 
 type AuthMe = {
   authenticated: boolean;
@@ -23,6 +24,16 @@ type AuthMe = {
   email: string | null;
   usingMock: boolean;
 };
+
+async function fetchAuthMe(): Promise<AuthMe> {
+  const res = await fetch("/api/auth/me", {
+    method: "GET",
+    cache: "no-store",
+    headers: { "cache-control": "no-store" },
+  });
+  if (!res.ok) throw new Error("Failed to load auth");
+  return res.json();
+}
 
 export function AppShell({
   children,
@@ -32,35 +43,37 @@ export function AppShell({
   footer?: React.ReactNode;
 }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [mobileOpen, setMobileOpen] = React.useState(false);
   const [desktopOpen, setDesktopOpen] = React.useState(true);
 
-  // ===== 取得 /api/auth/me =====
-  const [me, setMe] = React.useState<AuthMe | null>(null);
-  const [loadingMe, setLoadingMe] = React.useState(true);
+  // ✅ 用 React Query 管理登入狀態（與整站統一的 key：["auth"]）
+  const authQ = useQuery({
+    queryKey: ["auth"],
+    queryFn: fetchAuthMe,
+    // 登出後要馬上更新，所以不要快取
+    staleTime: 0,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+    retry: 0,
+  });
 
+  // ✅ 監聽全域登出/登入事件（保險作法：例如別的元件廣播）
   React.useEffect(() => {
-    let aborted = false;
-    (async () => {
-      try {
-        setLoadingMe(true);
-        const res = await fetch("/api/auth/me", {
-          method: "GET",
-          cache: "no-store",
-          headers: { "cache-control": "no-store" },
-        });
-        const data = (await res.json()) as AuthMe;
-        if (!aborted) setMe(data);
-      } catch {
-        if (!aborted) setMe(null);
-      } finally {
-        if (!aborted) setLoadingMe(false);
-      }
-    })();
-    return () => {
-      aborted = true;
+    const onChanged = () => {
+      queryClient.invalidateQueries({ queryKey: ["auth"] });
     };
-  }, []);
+    window.addEventListener("ytpm:auth-changed", onChanged as EventListener);
+    return () => {
+      window.removeEventListener(
+        "ytpm:auth-changed",
+        onChanged as EventListener
+      );
+    };
+  }, [queryClient]);
+
+  const me = authQ.data;
+  const loadingMe = authQ.isLoading;
 
   const NavItems = (
     <nav className="space-y-1 p-4">
@@ -147,14 +160,13 @@ export function AppShell({
                 YT Playlist Manager
               </div>
 
-              {/* 右側：使用者區塊（實際資料） */}
+              {/* 右側：使用者區塊（用 React Query 的 auth 狀態） */}
               <div className="ml-auto">
                 {loadingMe ? (
                   <div className="h-7 w-28 rounded-full bg-muted animate-pulse" />
                 ) : me?.authenticated ? (
                   <AvatarMenu
                     user={{
-                      // 目前 /api/auth/me 沒回 name/image，就以 email 當顯示名稱
                       name: me.email ?? me.userId ?? "User",
                       email: me.email,
                       image: null,
