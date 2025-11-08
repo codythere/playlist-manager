@@ -1,7 +1,7 @@
 # yt-playlist-manager
 
 🎬 **Project Introduction & Demo Video**  
-[![Watch the demo](https://img.youtube.com/vi/VIDEO_ID/hqdefault.jpg)](https://youtu.be/VIDEO_ID)
+[![Watch the demo](https://img.youtube.com/vi/VIDEO_ID/hqdefault.jpg)](https://www.youtube.com/watch?v=2swJjpv5rZk&feature=youtu.be)
 
 A Next.js (App Router) application for managing YouTube playlists in bulk. Sign in with Google, fetch your playlists, and perform batch add/move/remove operations with a single interface.
 
