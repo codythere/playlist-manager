@@ -8,8 +8,32 @@ import { requireUserId } from "@/lib/auth";
 import { getUserTokens } from "@/lib/google";
 import { logger } from "@/lib/logger";
 import { withTransaction } from "@/lib/db";
+import type { ActionItemRecord } from "@/types/actions";
 
 export const dynamic = "force-dynamic";
+
+// 讓 HomeClient 那邊的 AddApiResult 型別可以對得上
+type CreatedItem = {
+  playlistItemId?: string | null;
+  videoId?: string | null;
+};
+
+function buildCreated(
+  items: ActionItemRecord[] | undefined | null
+): CreatedItem[] {
+  if (!items) return [];
+  return items
+    .filter(
+      (it) =>
+        it.type === "ADD" &&
+        it.status === "success" &&
+        !!it.targetPlaylistItemId
+    )
+    .map((it) => ({
+      playlistItemId: it.targetPlaylistItemId,
+      videoId: it.videoId,
+    }));
+}
 
 async function getUserIdFromRequest(req: NextRequest): Promise<string | null> {
   try {
@@ -61,22 +85,29 @@ export async function POST(request: NextRequest) {
     payload.idempotencyKey ??
     undefined;
 
+  // ✅ Idempotent hit：從 action log 重建 created[]
   if (idempotencyKey && (await checkIdempotencyKey(idempotencyKey))) {
-    const summary = await getActionSummary(idempotencyKey); // ⬅️ await
+    const summary = await getActionSummary(idempotencyKey);
     if (summary && summary.action.userId === userId) {
+      const created = buildCreated(summary.items);
+      const estimatedQuota = created.length * 50; // delete 時也用 50，一致就好
+
       return jsonOk({
         ...summary,
-        estimatedQuota: (payload.videoIds?.length ?? 0) * 50,
+        created,
+        estimatedQuota,
         idempotent: true,
       });
     }
   }
 
+  // ✅ 實際執行 bulk add（有交易）
   const result = await withTransaction(async (client) => {
     const normalized = {
       targetPlaylistId: payload.targetPlaylistId,
       items: (payload.videoIds ?? []).map((v) => ({ videoId: v })),
     } as any;
+
     return performBulkAdd(normalized, {
       userId,
       actionId: idempotencyKey,
@@ -86,5 +117,11 @@ export async function POST(request: NextRequest) {
 
   if (idempotencyKey) await registerIdempotencyKey(idempotencyKey);
 
-  return jsonOk({ ...result, idempotent: false });
+  const created = buildCreated(result.items);
+
+  return jsonOk({
+    ...result,
+    created, // 👈 給前端 Undo / lastOp 用
+    idempotent: false,
+  });
 }

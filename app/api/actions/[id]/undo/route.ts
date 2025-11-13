@@ -15,7 +15,7 @@ export async function POST(
     }
 
     const { id: actionId } = await ctx.params; // ✅ 必須 await
-    const summary = getActionSummary(actionId);
+    const summary = await getActionSummary(actionId);
     if (!summary || summary.action.userId !== auth.userId) {
       return jsonError("not_found", "Action not found", { status: 404 });
     }
