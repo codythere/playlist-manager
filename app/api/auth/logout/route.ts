@@ -20,6 +20,7 @@ export async function POST() {
       access_token?: string | null;
       refresh_token?: string | null;
     } | null = null;
+
     if (userId) {
       try {
         tokens = await getTokensByUserId(userId);
@@ -80,11 +81,13 @@ export async function GET(request: Request) {
   const url = new URL(request.url);
   const next = url.searchParams.get("next") || "/login";
 
-  return NextResponse.redirect(
-    new URL(next, process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
-    {
-      status: 302,
-      headers: { "Cache-Control": "no-store" },
-    }
-  );
+  // ✅ 優先用 APP_BASE_URL，其次用當前請求的 origin，完全不再 fallback localhost
+  const baseUrl = process.env.APP_BASE_URL ?? `${url.protocol}//${url.host}`;
+
+  const redirectUrl = new URL(next, baseUrl);
+
+  return NextResponse.redirect(redirectUrl, {
+    status: 302,
+    headers: { "Cache-Control": "no-store" },
+  });
 }
