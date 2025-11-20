@@ -1,10 +1,12 @@
 import pino from "pino";
 
-const level = process.env.LOG_LEVEL ?? (process.env.NODE_ENV === "development" ? "debug" : "info");
+const level =
+  process.env.LOG_LEVEL ??
+  (process.env.NODE_ENV === "development" ? "debug" : "info");
 
 export const logger = pino({
   level,
-  base: { service: "yt-playlist-manager" },
+  base: { service: "playlist-manager" },
 });
 
 export type Logger = typeof logger;

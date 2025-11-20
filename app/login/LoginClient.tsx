@@ -37,7 +37,7 @@ export default function LoginClient({
         {/* Logo + Title */}
         <div className="mb-6 flex items-center gap-2">
           <Image src="/logo.png" alt="App Logo" width={24} height={24} />
-          <div className="text-base font-semibold">YT Playlist Manager</div>
+          <div className="text-base font-semibold">Playlist Manager</div>
         </div>
 
         <h1 className="mb-1 text-xl font-semibold">Sign in</h1>

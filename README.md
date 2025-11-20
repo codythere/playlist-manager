@@ -1,4 +1,4 @@
-# yt-playlist-manager
+# playlist-manager
 
 🎬 **Project Introduction & Demo Video**  
 https://www.youtube.com/watch?v=2swJjpv5rZk&feature=youtu.be

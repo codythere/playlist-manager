@@ -6,7 +6,7 @@ import LoginClient from "./LoginClient";
 import { resolveAuthContext } from "@/lib/auth";
 
 export const metadata: Metadata = {
-  title: "Sign in | YT Playlist Manager",
+  title: "Sign in | Playlist Manager",
 };
 
 // ✅ 在 Next 15，searchParams 需 await 後使用

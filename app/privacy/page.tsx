@@ -2,7 +2,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | YT Playlist Manager",
+  title: "Privacy Policy | Playlist Manager",
 };
 
 export default function PrivacyPage() {
@@ -15,7 +15,7 @@ export default function PrivacyPage() {
 
         <section className="space-y-4">
           <p>
-            本頁面說明「YT Playlist
+            本頁面說明「Playlist
             Manager」（以下簡稱「本服務」）如何使用與保護您透過 Google OAuth
             所授權的資料。本服務遵守
             <strong> Google API Services User Data Policy </strong>
@@ -23,7 +23,7 @@ export default function PrivacyPage() {
           </p>
 
           <p>
-            This Privacy Policy explains how “YT Playlist Manager” (the
+            This Privacy Policy explains how “Playlist Manager” (the
             <strong> Service</strong>) collects, uses, stores, and protects data
             obtained through Google OAuth, in compliance with the
             <strong> Google API Services User Data Policy</strong>, including

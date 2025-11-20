@@ -33,8 +33,7 @@ export function Footer() {
         {/* 法務／隱私連結 */}
         <div className="flex flex-wrap items-center gap-3 pt-3 border-t text-[11px]">
           <span className="text-muted-foreground">
-            {/* 這裡的名稱建議未來改成不含「YT」的正式產品名 */}
-            YT Playlist Manager · v{version}
+            Playlist Manager · v{version}
           </span>
           <span>·</span>
           <div className="flex flex-wrap items-center gap-3">
