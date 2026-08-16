@@ -88,11 +88,7 @@ export function PlaylistList({
                       ? "border-violet-600 bg-violet-600 shadow-[0_0_0_1px_rgba(124,58,237,0.12)]"
                       : "border-slate-200 bg-white",
                   )}
-                >
-                  {isChecked ? (
-                    <Check className="h-3 w-3 stroke-[3] text-white" />
-                  ) : null}
-                </span>
+                />
               </button>
             )}
 
