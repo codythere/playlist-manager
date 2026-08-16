@@ -77,15 +77,13 @@ export function PlaylistList({
                 aria-label={isChecked ? "Unselect playlist" : "Select playlist"}
                 className={cn(
                   "absolute right-3 top-3 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-white/95 shadow-[0_8px_18px_-12px_rgba(15,23,42,0.9)] transition-all duration-200",
-                  isChecked &&
-                    "shadow-[0_8px_18px_-12px_rgba(15,23,42,0.9),inset_0_0_0_2px_rgba(196,181,253,0.8)]",
                 )}
               >
                 <span
                   className={cn(
                     "flex h-[16px] w-[16px] items-center justify-center rounded-full border transition-all duration-200",
                     isChecked
-                      ? "border-violet-600 bg-violet-600 shadow-[0_0_0_1px_rgba(124,58,237,0.12)]"
+                      ? "border-violet-600 bg-violet-600 ring-[3px] ring-violet-300/70"
                       : "border-slate-200 bg-white",
                   )}
                 />
