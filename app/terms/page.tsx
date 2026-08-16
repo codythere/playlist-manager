@@ -2,7 +2,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Terms of Use | Playlist Optimizer",
+  title: "Terms of Use | Playlist Manager",
 };
 
 export default function TermsPage() {
@@ -15,11 +15,11 @@ export default function TermsPage() {
         <section className="space-y-4">
           <p>
             歡迎使用「Playlist
-            Optimizer」（以下簡稱「本服務」）。請在使用本服務前詳細閱讀本使用條款。當您登入並使用本服務時，即表示您已閱讀、理解並同意受本條款的約束。
+            Manager」（以下簡稱「本服務」）。請在使用本服務前詳細閱讀本使用條款。當您登入並使用本服務時，即表示您已閱讀、理解並同意受本條款的約束。
           </p>
 
           <p>
-            By accessing or using <strong>“Playlist Optimizer”</strong> (the{" "}
+            By accessing or using <strong>“Playlist Manager”</strong> (the{" "}
             <strong>Service</strong>), you agree to be bound by these Terms of
             Use. If you do not agree to these terms, please do not use the
             Service.

@@ -33,7 +33,7 @@ export function Footer() {
         {/* 法務／隱私連結 */}
         <div className="flex flex-wrap items-center gap-3 pt-3 border-t text-[11px]">
           <span className="text-muted-foreground">
-            Playlist Optimizer · v{version}
+            Playlist Manager · v{version}
           </span>
           <span>·</span>
           <div className="flex flex-wrap items-center gap-3">
@@ -54,7 +54,7 @@ export function Footer() {
 
           <div className="ml-auto">
             <Link
-              href="https://github.com/codythere/yt-playlist-optimizer"
+              href="https://github.com/codythere/yt-playlist-manager"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 hover:text-foreground transition-colors"

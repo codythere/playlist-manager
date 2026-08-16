@@ -2,7 +2,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Playlist Optimizer",
+  title: "Privacy Policy | Playlist Manager",
 };
 
 export default function PrivacyPage() {
@@ -16,14 +16,14 @@ export default function PrivacyPage() {
         <section className="space-y-4">
           <p>
             本頁面說明「Playlist
-            Optimizer」（以下簡稱「本服務」）如何使用與保護您透過 Google OAuth
+            Manager」（以下簡稱「本服務」）如何使用與保護您透過 Google OAuth
             所授權的資料。本服務遵守
             <strong> Google API Services User Data Policy </strong>
             ，包含其中的<strong> Limited Use </strong>要求。
           </p>
 
           <p>
-            This Privacy Policy explains how “Playlist Optimizer” (the
+            This Privacy Policy explains how “Playlist Manager” (the
             <strong> Service</strong>) collects, uses, stores, and protects data
             obtained through Google OAuth, in compliance with the
             <strong> Google API Services User Data Policy</strong>, including
