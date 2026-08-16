@@ -12,17 +12,16 @@ const Checkbox = React.forwardRef<
   <CheckboxPrimitive.Root
     ref={ref}
     className={cn(
-      // 用 Radix 的 data-state 來控制樣式（checked/unchecked/disabled）
-      "peer h-5 w-5 shrink-0 rounded border border-input bg-background text-primary-foreground shadow",
+      "peer flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 border-slate-300 bg-white shadow-sm transition-all duration-200",
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
       "disabled:cursor-not-allowed disabled:opacity-50",
-      "data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground",
-      className
+      "data-[state=checked]:border-violet-600 data-[state=checked]:bg-violet-600 data-[state=checked]:text-white",
+      className,
     )}
     {...props}
   >
     <CheckboxPrimitive.Indicator className="flex items-center justify-center">
-      <Check className="h-3.5 w-3.5" aria-hidden />
+      <Check className="h-3 w-3 stroke-[2.5]" aria-hidden />
     </CheckboxPrimitive.Indicator>
   </CheckboxPrimitive.Root>
 ));

@@ -1550,7 +1550,7 @@ export default function HomeClient() {
         <main className="mx-auto max-w-6xl p-6 space-y-8">
           <section className="space-y-3">
             <div className="text-lg font-semibold">已選取播放清單：</div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 h-8">
               {[...checkedPlaylistIds].map((pid) => {
                 const p = allPlaylists.find((x) => x.id === pid);
                 if (!p) return null;
@@ -1564,13 +1564,18 @@ export default function HomeClient() {
                 );
               })}
             </div>
-            <div className="flex gap-2">
-              <Button variant="secondary" onClick={onCancelSelect}>
+            <div className="flex gap-2 h-10">
+              <Button
+                variant="secondary"
+                onClick={onCancelSelect}
+                className="rounded-lg border border-slate-200/60 bg-white/70 text-slate-700 font-medium hover:bg-slate-50 hover:shadow-sm transition-all duration-200"
+              >
                 取消
               </Button>
               <Button
                 onClick={onConfirmSelect}
                 disabled={checkedPlaylistIds.size === 0}
+                className="rounded-lg bg-violet-600 text-white font-medium hover:bg-violet-700 shadow-sm hover:shadow-[0_6px_14px_-4px_rgba(109,40,217,0.35)] disabled:opacity-50 disabled:hover:shadow-sm disabled:hover:bg-violet-600 transition-all duration-200"
               >
                 確認
               </Button>

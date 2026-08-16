@@ -21,6 +21,7 @@ import {
   XCircle,
   Info,
   Copy,
+  Calendar,
 } from "lucide-react";
 import type {
   ActionCounts,
@@ -179,7 +180,7 @@ async function fetchPlaylistNames(ids: string[]) {
   if (ids.length === 0) return {} as Record<string, string>;
   const qs = new URLSearchParams({ ids: ids.join(",") }).toString();
   const data = await apiRequest<{ names: Record<string, string> }>(
-    `/api/youtube/meta/playlists?${qs}`
+    `/api/youtube/meta/playlists?${qs}`,
   );
   return data.names ?? {};
 }
@@ -188,7 +189,7 @@ async function fetchVideoTitles(ids: string[]) {
   if (ids.length === 0) return {} as Record<string, string>;
   const qs = new URLSearchParams({ ids: ids.join(",") }).toString();
   const data = await apiRequest<{ titles: Record<string, string> }>(
-    `/api/youtube/meta/videos?${qs}`
+    `/api/youtube/meta/videos?${qs}`,
   );
   return data.titles ?? {};
 }
@@ -196,7 +197,7 @@ async function fetchVideoTitles(ids: string[]) {
 /** 從「已載入的 items」收集還缺的 playlist 名稱 id */
 function collectMissingPlaylistIds(
   actions: Array<{ action: ActionRecord }>,
-  itemsByAction: Record<string, EnrichedActionItem[]>
+  itemsByAction: Record<string, EnrichedActionItem[]>,
 ) {
   const need: string[] = [];
 
@@ -222,7 +223,7 @@ function collectMissingPlaylistIds(
 
 /** 從「已載入的 items」收集還缺的 video 標題 id */
 function collectMissingVideoIds(
-  itemsByAction: Record<string, EnrichedActionItem[]>
+  itemsByAction: Record<string, EnrichedActionItem[]>,
 ) {
   const need: string[] = [];
   for (const list of Object.values(itemsByAction)) {
@@ -238,7 +239,7 @@ function collectMissingVideoIds(
 function usePlaylistNameResolver(
   actions: Array<{ action: ActionRecord }>,
   itemsByAction: Record<string, EnrichedActionItem[]>,
-  depVersion: number
+  depVersion: number,
 ) {
   const ids = collectMissingPlaylistIds(actions, itemsByAction);
   const query = useQuery({
@@ -252,7 +253,7 @@ function usePlaylistNameResolver(
 
 function useVideoTitleResolver(
   itemsByAction: Record<string, EnrichedActionItem[]>,
-  depVersion: number
+  depVersion: number,
 ) {
   const ids = collectMissingVideoIds(itemsByAction);
   const query = useQuery({
@@ -278,19 +279,19 @@ function Badge({
 }) {
   const map: Record<typeof color, string> = {
     green:
-      "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300",
+      "bg-emerald-100/70 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-200/50",
     yellow:
-      "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
-    red: "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300",
+      "bg-amber-100/70 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200/50",
+    red: "bg-rose-100/70 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300 border border-rose-200/50",
     slate:
-      "bg-slate-100 text-slate-800 dark:bg-slate-900/30 dark:text-slate-300",
-    blue: "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300",
+      "bg-slate-100/70 text-slate-700 dark:bg-slate-900/30 dark:text-slate-300 border border-slate-200/50",
+    blue: "bg-blue-100/70 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200/50",
   };
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium",
-        map[color]
+        "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-semibold backdrop-blur-sm",
+        map[color],
       )}
       title={title}
     >
@@ -353,7 +354,7 @@ function CopyButton({ text, className }: { text: string; className?: string }) {
       }}
       className={cn(
         "inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] text-muted-foreground hover:bg-muted",
-        className
+        className,
       )}
       title="Copy"
     >
@@ -373,10 +374,17 @@ function SectionTitle({
   right?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex items-center gap-2 text-sm font-semibold">
-        <Icon className="h-4 w-4 text-primary" />
-        <span>{title}</span>
+    <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center gap-2.5">
+        {/* Simplified icon container */}
+        <div className="flex items-center justify-center w-9 h-9 rounded-sm bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-md">
+          <Icon className="h-5 w-5" />
+        </div>
+
+        {/* Clean title */}
+        <h1 className="text-xl md:text-2xl font-semibold text-foreground">
+          {title}
+        </h1>
       </div>
       {right}
     </div>
@@ -385,7 +393,7 @@ function SectionTitle({
 
 function CardShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border bg-card/60 shadow-sm ring-1 ring-black/5 backdrop-blur-sm transition hover:shadow-md">
+    <div className="rounded-xl border border-slate-200/50 bg-white/60 backdrop-blur-sm shadow-[0_4px_12px_-4px_rgba(15,23,42,0.1)] transition-all duration-200 hover:shadow-[0_8px_20px_-6px_rgba(15,23,42,0.15)] hover:border-slate-200/70">
       {children}
     </div>
   );
@@ -417,7 +425,7 @@ export default function ActionLogClient() {
       apiRequest<ActionsResponse>(
         `/api/actions?limit=${pageSize}${
           pageParam ? `&cursor=${pageParam}` : ""
-        }`
+        }`,
       ),
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     initialPageParam: undefined as string | undefined,
@@ -430,7 +438,7 @@ export default function ActionLogClient() {
 
   // 收集各 action 已載入的 items
   const itemsByActionRef = React.useRef<Record<string, EnrichedActionItem[]>>(
-    {}
+    {},
   );
   const [itemsVersion, setItemsVersion] = React.useState(0);
   const onItemsLoaded = React.useCallback(
@@ -438,18 +446,18 @@ export default function ActionLogClient() {
       itemsByActionRef.current[actionId] = items;
       setItemsVersion((v) => v + 1); // 讓補缺 hooks 更新
     },
-    []
+    [],
   );
 
   // 只補「後端沒提供」的名稱/標題
   const playlistNames = usePlaylistNameResolver(
     actions,
     itemsByActionRef.current,
-    itemsVersion
+    itemsVersion,
   );
   const videoTitles = useVideoTitleResolver(
     itemsByActionRef.current,
-    itemsVersion
+    itemsVersion,
   );
 
   // 自動載入更多
@@ -477,13 +485,18 @@ export default function ActionLogClient() {
 
   if (actionsQuery.isLoading) {
     return (
-      <div className="mx-auto max-w-4xl p-6">
-        <SectionTitle icon={List} title="Action Log" />
-        <CardShell>
-          <SkeletonRow />
-          <SkeletonRow />
-          <SkeletonRow />
-        </CardShell>
+      <div className="relative min-h-screen bg-gradient-to-br from-white via-slate-50/50 to-slate-100/30">
+        {/* Decorative background */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-violet-100/40 to-purple-100/20 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 mx-auto max-w-6xl p-6">
+          <SectionTitle icon={List} title="Action Log" />
+          <div className="mt-8 space-y-3">
+            <SkeletonRow />
+            <SkeletonRow />
+            <SkeletonRow />
+          </div>
+        </div>
       </div>
     );
   }
@@ -492,109 +505,169 @@ export default function ActionLogClient() {
     const error = actionsQuery.error as ApiError;
     if (error.code === "unauthorized") {
       return (
-        <div className="p-6 text-sm text-muted-foreground">
-          Sign in to view your recent actions.
+        <div className="relative min-h-screen bg-gradient-to-br from-white via-slate-50/50 to-slate-100/30 flex items-center justify-center">
+          <div className="relative z-10 text-center">
+            <div className="mb-4 text-5xl">🔐</div>
+            <p className="text-lg text-muted-foreground font-medium">
+              Sign in to view your recent actions.
+            </p>
+          </div>
         </div>
       );
     }
     return (
-      <div className="p-6 text-sm text-destructive">
-        {error.message || "Failed to load actions"}
+      <div className="relative min-h-screen bg-gradient-to-br from-white via-slate-50/50 to-slate-100/30 flex items-center justify-center">
+        <div className="relative z-10 text-center">
+          <div className="mb-4 text-5xl">⚠️</div>
+          <p className="text-lg text-destructive font-medium">
+            {error.message || "Failed to load actions"}
+          </p>
+        </div>
       </div>
     );
   }
 
   if (!actions.length) {
     return (
-      <div className="mx-auto max-w-4xl p-6">
-        <SectionTitle icon={List} title="Action Log" />
-        <CardShell>
-          <div className="flex items-center gap-2 px-4 py-6 text-sm text-muted-foreground">
-            <Info className="h-4 w-4" />
-            No actions recorded yet. Run a bulk add/move/remove to populate
-            history.
+      <div className="relative min-h-screen bg-gradient-to-br from-white via-slate-50/50 to-slate-100/30">
+        {/* Decorative background */}
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-violet-100/40 to-purple-100/20 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 mx-auto max-w-6xl p-6">
+          <SectionTitle icon={List} title="Action Log" />
+          <div className="mt-8 flex items-center justify-center">
+            <CardShell>
+              <div className="flex flex-col items-center gap-3 px-8 py-12 text-center">
+                <div className="text-5xl">📋</div>
+                <p className="text-base font-medium text-foreground">
+                  No actions recorded yet
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Run a bulk add/move/remove to populate history.
+                </p>
+              </div>
+            </CardShell>
           </div>
-        </CardShell>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="mx-auto flex max-w-4xl flex-col gap-4 p-6">
-      {/* Header */}
-      <SectionTitle
-        icon={List}
-        title="Action Log"
-        right={
-          <div className="flex items-center gap-3 text-sm">
-            <div className="hidden items-center gap-2 text-muted-foreground sm:flex">
-              <Clock className="h-4 w-4" />
-              <span>Loaded pages: {actionsQuery.data?.pages.length ?? 1}</span>
-            </div>
+    <div className="relative min-h-screen bg-gradient-to-br from-white via-slate-50/50 to-slate-100/30">
+      {/* Decorative background elements */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-violet-100/40 to-purple-100/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-1/2 w-80 h-80 bg-gradient-to-tr from-blue-100/30 to-violet-100/20 rounded-full blur-3xl pointer-events-none" />
 
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground">Page size</span>
-              <DropdownSelect
-                aria-label="Page size"
-                value={String(pageSize)}
-                onValueChange={(val) => {
-                  const next = Number(val);
-                  setPageSize(next);
-                  queryClient.invalidateQueries({ queryKey: ["actions"] });
-                }}
-                options={[10, 20, 30, 50].map((n) => ({
-                  label: n,
-                  value: String(n),
-                }))}
-                triggerWidth={112}
-              />
-            </div>
+      <div className="relative z-10 mx-auto max-w-6xl px-6 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <SectionTitle
+            icon={List}
+            title="Action Log"
+            right={
+              <div className="flex flex-wrap items-center gap-4 md:gap-6 text-sm">
+                <div className="hidden items-center gap-2 text-muted-foreground sm:flex">
+                  <Clock className="h-5 w-5" />
+                  <span className="font-medium">
+                    Pages: {actionsQuery.data?.pages.length ?? 1}
+                  </span>
+                </div>
 
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-slate-600">
+                    Size
+                  </span>
+                  <DropdownSelect
+                    aria-label="Page size"
+                    value={String(pageSize)}
+                    onValueChange={(val) => {
+                      const next = Number(val);
+                      setPageSize(next);
+                      queryClient.invalidateQueries({ queryKey: ["actions"] });
+                    }}
+                    options={[10, 20, 30, 50].map((n) => ({
+                      label: n,
+                      value: String(n),
+                    }))}
+                    triggerWidth={100}
+                  />
+                </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.location.reload()}
+                  className="inline-flex items-center gap-2 rounded-lg"
+                  title="Refresh data"
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  <span className="hidden sm:inline">Refresh</span>
+                </Button>
+              </div>
+            }
+          />
+        </div>
+
+        {/* List */}
+        <div className="space-y-3">
+          {actions.map(({ action, counts }) => (
+            <ActionCard
+              key={action.id}
+              action={action}
+              counts={counts}
+              onRefetch={() => {
+                queryClient.invalidateQueries({ queryKey: ["actions"] });
+              }}
+              playlistNames={playlistNames}
+              videoTitles={videoTitles}
+              onItemsLoaded={onItemsLoaded}
+              getLoadedItems={() => itemsByActionRef.current[action.id] ?? []}
+            />
+          ))}
+        </div>
+
+        {/* Footer Load More */}
+        {actionsQuery.hasNextPage ? (
+          <div className="mt-8 flex flex-col items-center gap-4">
+            <div ref={loadMoreRef} />
             <Button
               variant="outline"
-              size="sm"
-              onClick={() => window.location.reload()}
-              className="inline-flex items-center gap-1"
-              title="Refresh data"
+              onClick={() => actionsQuery.fetchNextPage()}
+              disabled={actionsQuery.isFetchingNextPage}
+              className="rounded-lg px-6 py-2"
             >
-              <RefreshCw className="h-4 w-4" />
+              {actionsQuery.isFetchingNextPage ? (
+                <span className="flex items-center gap-2">
+                  <svg
+                    className="w-4 h-4 animate-spin"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  Loading...
+                </span>
+              ) : (
+                "Load more"
+              )}
             </Button>
           </div>
-        }
-      />
-
-      {/* List */}
-      <div className="space-y-3">
-        {actions.map(({ action, counts }) => (
-          <ActionCard
-            key={action.id}
-            action={action}
-            counts={counts}
-            onRefetch={() => {
-              queryClient.invalidateQueries({ queryKey: ["actions"] });
-            }}
-            playlistNames={playlistNames}
-            videoTitles={videoTitles}
-            onItemsLoaded={onItemsLoaded}
-            getLoadedItems={() => itemsByActionRef.current[action.id] ?? []}
-          />
-        ))}
+        ) : null}
       </div>
-
-      {/* Footer Load More */}
-      {actionsQuery.hasNextPage ? (
-        <div className="flex flex-col items-center gap-2">
-          <div ref={loadMoreRef} />
-          <Button
-            variant="outline"
-            onClick={() => actionsQuery.fetchNextPage()}
-            disabled={actionsQuery.isFetchingNextPage}
-            className="rounded-lg"
-          >
-            {actionsQuery.isFetchingNextPage ? "Loading..." : "Load more"}
-          </Button>
-        </div>
-      ) : null}
     </div>
   );
 }
@@ -650,64 +723,83 @@ function ActionCard({
 
   return (
     <CardShell>
-      <div className="px-4 py-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
+      <div className="px-5 py-4">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          {/* Left side - Info */}
+          <div className="min-w-0 flex-1">
+            {/* Badges and toggle */}
+            <div className="flex flex-wrap items-center gap-2 mb-3">
               <TypeBadge type={action.type} />
               <StatusBadge status={action.status} />
               <button
                 type="button"
                 onClick={toggle}
-                className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-primary hover:bg-primary/10"
+                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold text-violet-600 hover:bg-violet-50 transition-colors"
                 aria-expanded={expanded}
               >
                 {icon}
-                {expanded ? "Hide items" : "Show items"}
+                <span className="hidden sm:inline">
+                  {expanded ? "Hide" : "Show"} items
+                </span>
               </button>
             </div>
 
-            <div className="mt-1 line-clamp-1 text-xs text-muted-foreground">
-              <span className="font-medium">Created</span>{" "}
-              {formatTimestamp(action.createdAt)}{" "}
-              <span className="mx-1 opacity-60">/</span>
-              <span className="font-medium">Finished</span>{" "}
-              {formatTimestamp(action.finishedAt)}
-            </div>
+            {/* Timeline info */}
+            <div className="text-xs text-muted-foreground space-y-1">
+              <div className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                <span>
+                  Created{" "}
+                  <span className="font-semibold">
+                    {formatTimestamp(action.createdAt)}
+                  </span>
+                </span>
+                <span className="opacity-40">•</span>
+                <span>
+                  Finished{" "}
+                  <span className="font-semibold">
+                    {formatTimestamp(action.finishedAt)}
+                  </span>
+                </span>
+              </div>
 
-            <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <span className="opacity-70">Source:</span>
-                <span className="truncate">{sourceName}</span>
+              {/* Source and target */}
+              <div className="flex flex-wrap items-center gap-2 text-xs">
+                <span className="inline-flex items-center gap-1">
+                  <span className="opacity-60">From:</span>
+                  <span className="truncate font-medium text-slate-700">
+                    {sourceName}
+                  </span>
+                </span>
+                <span className="opacity-40">→</span>
+                <span className="inline-flex items-center gap-1">
+                  <span className="opacity-60">To:</span>
+                  <span className="truncate font-medium text-slate-700">
+                    {targetName}
+                  </span>
+                </span>
               </div>
-              <span className="opacity-40">/</span>
-              <div className="flex items-center gap-1">
-                <span className="opacity-70">Target:</span>
-                <span className="truncate">{targetName}</span>
-              </div>
+
               {action.parentActionId ? (
-                <>
-                  <span className="opacity-40">/</span>
-                  <div className="flex items-center gap-1">
-                    <span className="opacity-70">Parent:</span>
-                    <span className="font-mono">{action.parentActionId}</span>
-                  </div>
-                </>
+                <div className="text-[10px] opacity-50 font-mono">
+                  Parent: {action.parentActionId}
+                </div>
               ) : null}
             </div>
           </div>
 
-          <div className="shrink-0">
-            <div className="flex items-center gap-2 text-xs">
-              <Badge color="green">
+          {/* Right side - Stats */}
+          <div className="shrink-0 flex flex-col gap-2">
+            <div className="flex items-center gap-1.5 text-xs">
+              <Badge color="green" title="Successful items">
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 {counts.success}
               </Badge>
-              <Badge color="red">
+              <Badge color="red" title="Failed items">
                 <XCircle className="h-3.5 w-3.5" />
                 {counts.failed}
               </Badge>
-              <Badge color="slate">
+              <Badge color="slate" title="Total items">
                 <List className="h-3.5 w-3.5" />
                 {counts.total}
               </Badge>
@@ -754,7 +846,7 @@ function ActionDetails({
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [itemPageSize, setItemPageSize] = React.useState<number>(
-    DEFAULT_ITEM_PAGE_SIZE
+    DEFAULT_ITEM_PAGE_SIZE,
   );
 
   const summaryQuery = useQuery({
@@ -771,7 +863,7 @@ function ActionDetails({
       apiRequest<ActionItemsPageResponse>(
         `/api/actions/${actionId}/items?limit=${itemPageSize}${
           pageParam ? `&cursor=${pageParam}` : ""
-        }`
+        }`,
       ),
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
     enabled: expanded,
@@ -794,7 +886,7 @@ function ActionDetails({
     mutationFn: () =>
       apiRequest<ActionSummaryResponse>(
         `/api/actions/${actionId}/retry-failed`,
-        { method: "POST" }
+        { method: "POST" },
       ),
     onSuccess: () => {
       toast({ title: "Retry scheduled", duration: 3000 });
@@ -832,20 +924,19 @@ function ActionDetails({
     <div
       className={cn(
         "grid overflow-hidden transition-[grid-template-rows,opacity] duration-300",
-        expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+        expanded ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
       )}
     >
       <div className="min-h-0">
-        <div className="mt-4 space-y-3 rounded-lg border bg-background/60 p-3">
-          {/* 操作列 */}
+        <div className="mt-4 space-y-4 rounded-lg border border-slate-200/30 bg-gradient-to-br from-slate-50/50 to-slate-100/30 backdrop-blur-sm p-4">
+          {/* Action buttons row */}
           <div className="flex flex-wrap items-center gap-2">
             <Button
               variant="outline"
               size="sm"
               onClick={() => retryMutation.mutate()}
               disabled={true}
-              /*disabled={counts.failed === 0 || retryMutation.isPending}*/
-              className="inline-flex items-center gap-1"
+              className="inline-flex items-center gap-2 rounded-lg"
             >
               <RefreshCw className="h-4 w-4" />
               Retry failed
@@ -855,15 +946,16 @@ function ActionDetails({
               size="sm"
               onClick={() => undoMutation.mutate()}
               disabled={true}
-              /*disabled={undoMutation.isPending}*/
-              className="inline-flex items-center gap-1"
+              className="inline-flex items-center gap-2 rounded-lg"
             >
               <Undo2 className="h-4 w-4" />
               Undo
             </Button>
 
-            <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
-              <span>Items per page</span>
+            <div className="ml-auto flex items-center gap-2 text-xs">
+              <span className="text-muted-foreground font-medium">
+                Items per page
+              </span>
               <DropdownSelect
                 aria-label="Items per page"
                 value={String(itemPageSize)}
@@ -883,19 +975,19 @@ function ActionDetails({
             </div>
           </div>
 
-          {/* Summary 區 */}
+          {/* Summary loading state */}
           {summaryQuery.isLoading ? (
-            <div className="text-xs text-muted-foreground">
+            <div className="text-xs text-muted-foreground py-2">
               Loading summary...
             </div>
           ) : summaryQuery.isError ? (
-            <div className="text-xs text-destructive">
+            <div className="text-xs text-destructive py-2">
               {(summaryQuery.error as Error).message ??
                 "Failed to load action summary"}
             </div>
           ) : null}
 
-          {/* Items 表格 */}
+          {/* Items table section */}
           {itemsQuery.isLoading ? (
             <div className="space-y-2">
               <div className="h-8 w-full animate-pulse rounded bg-muted/60" />
@@ -930,21 +1022,21 @@ function ActionDetails({
                     const srcName =
                       meta?.sourcePlaylistName ??
                       (it.sourcePlaylistId
-                        ? playlistNames[it.sourcePlaylistId] ??
-                          it.sourcePlaylistId
+                        ? (playlistNames[it.sourcePlaylistId] ??
+                          it.sourcePlaylistId)
                         : "-");
 
                     const tgtName =
                       meta?.targetPlaylistName ??
                       (it.targetPlaylistId
-                        ? playlistNames[it.targetPlaylistId] ??
-                          it.targetPlaylistId
+                        ? (playlistNames[it.targetPlaylistId] ??
+                          it.targetPlaylistId)
                         : "-");
 
                     const title =
                       meta?.videoTitle ??
                       (it.videoId
-                        ? videoTitles[it.videoId] ?? it.videoId
+                        ? (videoTitles[it.videoId] ?? it.videoId)
                         : "-");
 
                     return (
@@ -952,7 +1044,7 @@ function ActionDetails({
                         key={it.id}
                         className={cn(
                           "text-xs transition hover:bg-muted/40",
-                          idx % 2 === 1 ? "bg-muted/20" : ""
+                          idx % 2 === 1 ? "bg-muted/20" : "",
                         )}
                       >
                         <td className="py-2 pr-3 font-medium">{it.type}</td>

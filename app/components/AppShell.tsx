@@ -88,14 +88,27 @@ export function AppShell({
 
   const navLinkClass = (active: boolean) =>
     cn(
-      "flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+      "flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
       active
-        ? "bg-accent text-foreground"
-        : "text-muted-foreground hover:bg-accent hover:text-foreground",
+        ? "bg-gradient-to-r from-violet-600/10 to-indigo-600/10 text-violet-700 ring-1 ring-violet-200 shadow-sm dark:from-violet-500/15 dark:to-indigo-500/15 dark:text-violet-200 dark:ring-violet-500/30"
+        : "text-muted-foreground hover:bg-accent/80 hover:text-foreground",
     );
 
   const NavItems = (
-    <nav className="space-y-1 p-4">
+    <nav className="space-y-2 p-4">
+      <div className="mb-3 px-2">
+        <div className="rounded-2xl bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-500 p-[1px] shadow-lg shadow-violet-500/20">
+          <div className="rounded-[15px] bg-background/90 px-3 py-2.5 backdrop-blur-sm">
+            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-violet-500 to-indigo-500 text-white shadow-sm">
+                <ListMusic className="h-3.5 w-3.5" />
+              </div>
+              Playlist Manager
+            </div>
+          </div>
+        </div>
+      </div>
+
       <Link href="/" className={navLinkClass(isActive("/"))}>
         <ListMusic className="h-4 w-4" />
         Playlist Manager
@@ -116,12 +129,16 @@ export function AppShell({
       {/* Sidebar（桌機固定版） */}
       <aside
         className={cn(
-          "hidden md:flex md:flex-col fixed left-0 top-0 h-screen border-r bg-background overflow-hidden transition-[width] duration-200",
-          desktopOpen ? "w-56" : "w-0",
+          "hidden md:flex md:flex-col fixed left-0 top-0 h-screen overflow-hidden border-r border-border/80 bg-background/80 shadow-[0_0_40px_-28px_rgba(15,23,42,0.45)] backdrop-blur-xl transition-[width] duration-200",
+          desktopOpen ? "w-64" : "w-0",
         )}
         aria-hidden={!desktopOpen}
       >
-        {desktopOpen ? NavItems : null}
+        {desktopOpen ? (
+          <div className="h-full bg-gradient-to-b from-violet-50/70 via-white to-background dark:from-violet-950/20 dark:via-background dark:to-background">
+            {NavItems}
+          </div>
+        ) : null}
       </aside>
 
       {/* 手機側欄 */}
@@ -140,16 +157,16 @@ export function AppShell({
       <div
         className={cn(
           "flex-1 transition-all duration-200",
-          desktopOpen ? "md:ml-56" : "md:ml-0",
+          desktopOpen ? "md:ml-64" : "md:ml-0",
         )}
       >
         <div className="flex min-h-screen flex-col">
-          <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur">
-            <div className="flex h-14 items-center gap-2 px-4">
+          <header className="sticky top-0 z-30 border-b border-border/70 bg-background/70 backdrop-blur-xl">
+            <div className="mx-auto flex h-16 w-full max-w-[1500px] items-center gap-2 px-4 md:px-6">
               {/* 手機：打開 Sheet */}
               <button
                 aria-label="Open navigation"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-accent md:hidden"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border/80 bg-white/60 text-foreground shadow-sm hover:bg-accent md:hidden"
                 onClick={() => setMobileOpen(true)}
               >
                 <Menu className="h-5 w-5" />
@@ -159,16 +176,23 @@ export function AppShell({
               <button
                 aria-label="Toggle sidebar"
                 aria-expanded={desktopOpen}
-                className="hidden md:inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-accent"
+                className="hidden h-9 w-9 items-center justify-center rounded-xl border border-border/80 bg-white/60 text-foreground shadow-sm hover:bg-accent md:inline-flex"
                 onClick={() => setDesktopOpen((v) => !v)}
               >
                 <Menu className="h-5 w-5" />
               </button>
 
               {/* 左側：Logo 與標題 */}
-              <div className="flex items-center gap-1.5 text-base font-semibold">
-                <Image src="/logo.png" alt="App Logo" width={20} height={20} />
-                Playlist Manager
+              <div className="flex items-center gap-2 text-sm font-semibold tracking-tight text-foreground sm:text-base">
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 via-indigo-500 to-blue-500 shadow-lg shadow-violet-500/25">
+                  <Image
+                    src="/logo.png"
+                    alt="App Logo"
+                    width={18}
+                    height={18}
+                  />
+                </div>
+                <span className="hidden sm:inline">Playlist Manager</span>
               </div>
 
               {/* 右側：使用者區塊（用 React Query 的 auth 狀態） */}
@@ -186,7 +210,7 @@ export function AppShell({
                   />
                 ) : (
                   <button
-                    className="rounded-md px-3 py-1.5 text-sm font-medium hover:bg-accent"
+                    className="rounded-xl bg-gradient-to-r from-violet-600 to-indigo-600 px-3.5 py-2 text-sm font-medium text-white shadow-lg shadow-violet-500/25 transition hover:from-violet-500 hover:to-indigo-500"
                     onClick={() =>
                       router.push(
                         `/login?redirect=${encodeURIComponent(
@@ -202,7 +226,7 @@ export function AppShell({
             </div>
           </header>
 
-          <main className="flex-1 p-6">{children}</main>
+          <main className="flex-1 p-4 sm:p-6 lg:p-8">{children}</main>
           {footer ?? null}
         </div>
       </div>

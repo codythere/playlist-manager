@@ -3,78 +3,77 @@
 @tailwind utilities;
 
 :root {
-  --background: 0 0% 100%;
-  --foreground: 240 10% 3.9%;
+  --background: 220 40% 98%;
+  --foreground: 224 47% 12%;
 
-  --muted: 240 4.8% 95.9%;
-  --muted-foreground: 240 3.8% 46.1%;
+  --muted: 220 25% 96%;
+  --muted-foreground: 220 16% 40%;
 
   --popover: 0 0% 100%;
-  --popover-foreground: 240 10% 3.9%;
+  --popover-foreground: 224 47% 12%;
 
   --card: 0 0% 100%;
-  --card-foreground: 240 10% 3.9%;
+  --card-foreground: 224 47% 12%;
 
-  --border: 240 5.9% 90%;
-  --input: 240 5.9% 90%;
+  --border: 220 27% 92%;
+  --input: 220 27% 92%;
 
-  --primary: 0 72% 47%;
+  --primary: 262 82% 58%;
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 240 4.8% 95.9%;
-  --secondary-foreground: 240 5.9% 10%;
+  --secondary: 220 26% 97%;
+  --secondary-foreground: 224 47% 12%;
 
-  --accent: 240 4.8% 95.9%;
-  --accent-foreground: 240 5.9% 10%;
+  --accent: 240 26% 96%;
+  --accent-foreground: 224 47% 12%;
 
-  --destructive: 0 84.2% 60.2%;
+  --destructive: 0 75% 60%;
   --destructive-foreground: 0 0% 100%;
 
-  --ring: 0 72% 47%;
-  --radius: 0.75rem;
+  --ring: 262 82% 58%;
+  --radius: 1rem;
 }
 
 .dark {
-  --background: 240 10% 3.9%;
-  --foreground: 0 0% 98%;
+  --background: 224 30% 8%;
+  --foreground: 220 33% 96%;
 
-  --muted: 240 3.7% 15.9%;
-  --muted-foreground: 240 5% 64.9%;
+  --muted: 224 23% 14%;
+  --muted-foreground: 220 16% 72%;
 
-  --popover: 240 10% 3.9%;
-  --popover-foreground: 0 0% 98%;
+  --popover: 224 30% 10%;
+  --popover-foreground: 220 33% 96%;
 
-  --card: 240 10% 3.9%;
-  --card-foreground: 0 0% 98%;
+  --card: 224 28% 11%;
+  --card-foreground: 220 33% 96%;
 
-  --border: 240 3.7% 15.9%;
-  --input: 240 3.7% 15.9%;
+  --border: 224 23% 18%;
+  --input: 224 23% 18%;
 
-  --primary: 0 72% 47%;
-  --primary-foreground: 0 0% 100%;
+  --primary: 262 92% 66%;
+  --primary-foreground: 224 47% 12%;
 
-  --secondary: 240 3.7% 15.9%;
-  --secondary-foreground: 0 0% 98%;
+  --secondary: 224 23% 14%;
+  --secondary-foreground: 220 33% 96%;
 
-  --accent: 240 3.7% 15.9%;
-  --accent-foreground: 0 0% 98%;
+  --accent: 224 23% 14%;
+  --accent-foreground: 220 33% 96%;
 
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
+  --destructive: 0 72% 52%;
+  --destructive-foreground: 220 33% 96%;
 
-  --ring: 0 72% 47%;
+  --ring: 262 92% 66%;
 }
 
 * {
   @apply border-border;
 }
 
-/* 永遠保留右側捲軸位置，避免任何寬度跳動 */
 html {
   overflow-y: scroll;
+  scroll-behavior: smooth;
 }
 
-/* 若仍有組件嘗試鎖捲動，取消它對 body 的補償（右邊 padding） */
 body[data-scroll-locked] {
   overflow-y: scroll !important;
   overflow-x: auto !important;
@@ -84,6 +83,47 @@ body[data-scroll-locked] {
 
 body {
   @apply bg-background text-foreground antialiased;
+  user-select: none;
+  background-image:
+    radial-gradient(
+      circle at top left,
+      rgba(139, 92, 246, 0.12),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(59, 130, 246, 0.12),
+      transparent 24%
+    ),
+    hsl(var(--background));
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply border border-white/60 bg-white/75 shadow-[0_20px_40px_-24px_rgba(15,23,42,0.35)] backdrop-blur-xl;
+  }
+
+  .soft-ring {
+    box-shadow:
+      0 0 0 1px rgba(139, 92, 246, 0.15),
+      0 10px 25px -18px rgba(76, 29, 149, 0.6);
+  }
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.65);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
 }
 
 .scrollbar-thin {
