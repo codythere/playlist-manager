@@ -34,7 +34,7 @@ function getOAuthClient(): OAuth2Client {
   return new google.auth.OAuth2(
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,
-    GOOGLE_REDIRECT_URI
+    GOOGLE_REDIRECT_URI,
   );
 }
 
@@ -43,8 +43,11 @@ export function buildAuthUrl(state: string): string | null {
   const oauth2 = getOAuthClient();
   const scopes = [
     "openid",
+    // "https://www.googleapis.com/auth/userinfo.email",
+    // "https://www.googleapis.com/auth/youtube",
     "https://www.googleapis.com/auth/userinfo.email",
-    "https://www.googleapis.com/auth/youtube",
+    "https://www.googleapis.com/auth/youtube.readonly",
+    "https://www.googleapis.com/auth/youtube.force-ssl",
   ];
   return oauth2.generateAuthUrl({
     access_type: "offline",
@@ -56,7 +59,7 @@ export function buildAuthUrl(state: string): string | null {
 }
 
 export async function exchangeCodeForTokens(
-  code: string
+  code: string,
 ): Promise<Credentials> {
   const oauth2 = getOAuthClient();
   const { tokens } = await oauth2.getToken(code);
@@ -64,7 +67,7 @@ export async function exchangeCodeForTokens(
 }
 
 export async function getEmailFromTokens(
-  tokens: Credentials
+  tokens: Credentials,
 ): Promise<string | null> {
   const oauth2 = getOAuthClient();
   oauth2.setCredentials(tokens);
@@ -92,7 +95,7 @@ async function ensureUserTokensTable() {
 
 export async function saveUserTokens(
   userId: string,
-  tokens: Credentials
+  tokens: Credentials,
 ): Promise<void> {
   await ensureUserTokensTable();
   await query(
@@ -115,18 +118,18 @@ export async function saveUserTokens(
       tokens.expiry_date ?? null,
       tokens.id_token ?? null,
       Date.now(),
-    ]
+    ],
   );
 }
 
 export async function getUserTokens(
-  userId: string
+  userId: string,
 ): Promise<StoredTokens | null> {
   await ensureUserTokensTable();
   const { rows } = await query<StoredTokens>(
     `SELECT user_id, access_token, refresh_token, scope, token_type, expiry_date, id_token, updated_at
      FROM user_tokens WHERE user_id = $1`,
-    [userId]
+    [userId],
   );
   return rows[0] ?? null;
 }
@@ -183,7 +186,7 @@ export async function getYouTubeClientEx(opts: {
     if (err?.code === "NO_TOKENS") throw err;
     logger.error(
       { err, userId: opts.userId },
-      "getYouTubeClient failed; falling back to mock"
+      "getYouTubeClient failed; falling back to mock",
     );
     if (opts.requireReal) throw err;
     return { yt: null, mock: true };
@@ -191,7 +194,7 @@ export async function getYouTubeClientEx(opts: {
 }
 
 export async function getYouTubeClient(
-  userId: string
+  userId: string,
 ): Promise<youtube_v3.Youtube | null> {
   const { yt } = await getYouTubeClientEx({ userId, requireReal: false });
   return yt;
