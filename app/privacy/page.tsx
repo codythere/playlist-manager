@@ -79,7 +79,7 @@ export default function PrivacyPage() {
             二、OAuth Token 與安全性（OAuth Tokens & Security）
           </h2>
 
-          <p>授權期間，本服務可能安全儲存：</p>
+          <p>授權期間，本服務會以加密方式安全儲存：</p>
           <ul className="list-disc pl-6 space-y-2">
             <li>Access Token</li>
             <li>Refresh Token（若提供）</li>
@@ -106,21 +106,43 @@ export default function PrivacyPage() {
 
         <hr />
 
-        {/* Section 3 */}
+        {/* Section 3 (NEW) */}
         <section className="space-y-4">
           <h2 className="text-xl font-semibold">
-            三、資料保存與刪除（Data Retention & Deletion）
+            三、資料保護機制（Data Protection Measures）
           </h2>
 
-          <h3 className="font-medium">1. 保存期間</h3>
+          <h3 className="font-medium">1. 傳輸加密（Encryption in Transit）</h3>
           <p>
-            Tokens 與操作紀錄僅於服務運作所需期間保存，之後將定期清理或匿名化。
+            所有本服務與 Google API
+            之間、以及使用者瀏覽器與本服務伺服器之間的資料傳輸， 均透過{" "}
+            <strong>HTTPS / TLS</strong>{" "}
+            加密，防止資料在傳輸過程中被攔截或竄改。
           </p>
 
-          <h3 className="font-medium">2. 資料刪除請求</h3>
-          <p>若您欲刪除資料，請聯絡：</p>
+          <h3 className="font-medium">2. 儲存加密（Encryption at Rest）</h3>
           <p>
-            Email：<strong>codylai0217@gmail.com</strong>
+            OAuth Access Token 與 Refresh Token 於資料庫中以
+            <strong>加密形式（encrypted at rest）</strong>
+            儲存，並與其他系統資料隔離存放，避免未經授權的直接存取。
+          </p>
+
+          <h3 className="font-medium">3. 存取控制（Access Control）</h3>
+          <p>
+            僅本服務內部授權之系統程序可存取儲存的 Token 與使用者資料， 本服務
+            <strong>
+              不提供任何內部或外部人員直接查詢、匯出使用者 YouTube 資料的介面
+            </strong>
+            ， 所有資料存取均透過程式化、最小權限（least privilege）之方式進行。
+          </p>
+
+          <h3 className="font-medium">4. Limited Use 合規聲明</h3>
+          <p>
+            本服務對 Google 使用者資料的使用，嚴格遵循
+            <strong> Google API Services User Data Policy </strong>
+            中的 <strong>Limited Use</strong>{" "}
+            要求：僅將取得之資料用於提供、維護本服務中與播放清單管理直接相關之功能，
+            不會將資料用於廣告、資料轉售、或訓練一般性 AI／機器學習模型等用途。
           </p>
         </section>
 
