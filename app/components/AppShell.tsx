@@ -8,6 +8,7 @@ import { Menu, History, ListMusic } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { AvatarMenu } from "@/app/components/AvatarMenu";
+import { ThemeToggle } from "@/app/components/ThemeToggle";
 
 import {
   Sheet,
@@ -166,7 +167,7 @@ export function AppShell({
               {/* 手機：打開 Sheet */}
               <button
                 aria-label="Open navigation"
-                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border/80 bg-white/60 text-foreground shadow-sm hover:bg-accent md:hidden"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border/80 bg-background/60 text-foreground shadow-sm hover:bg-accent md:hidden"
                 onClick={() => setMobileOpen(true)}
               >
                 <Menu className="h-5 w-5" />
@@ -176,7 +177,7 @@ export function AppShell({
               <button
                 aria-label="Toggle sidebar"
                 aria-expanded={desktopOpen}
-                className="hidden h-9 w-9 items-center justify-center rounded-xl border border-border/80 bg-white/60 text-foreground shadow-sm hover:bg-accent md:inline-flex"
+                className="hidden h-9 w-9 items-center justify-center rounded-xl border border-border/80 bg-background/60 text-foreground shadow-sm hover:bg-accent md:inline-flex"
                 onClick={() => setDesktopOpen((v) => !v)}
               >
                 <Menu className="h-5 w-5" />
@@ -195,8 +196,9 @@ export function AppShell({
                 <span className="hidden sm:inline">Playlist Manager</span>
               </div>
 
-              {/* 右側：使用者區塊（用 React Query 的 auth 狀態） */}
-              <div className="ml-auto">
+              {/* 右側：主題切換 + 使用者區塊（用 React Query 的 auth 狀態） */}
+              <div className="ml-auto flex items-center gap-2">
+                <ThemeToggle />
                 {loadingMe ? (
                   <div className="h-7 w-28 rounded-full bg-muted animate-pulse" />
                 ) : me?.authenticated ? (

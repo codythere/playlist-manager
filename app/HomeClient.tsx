@@ -18,6 +18,7 @@ import { Button } from "@/app/components/ui/button";
 import { Checkbox } from "@/app/components/ui/checkbox";
 import { ActionsToolbar } from "@/app/components/ActionsToolbar";
 import { ProgressToast } from "@/app/components/ProgressToast";
+import { useOperationProgress } from "@/app/components/progress/OperationProgress";
 import { useConfirm } from "@/app/components/confirm/ConfirmProvider";
 import { useQuota } from "@/app/hooks/useQuota";
 import { useVideoOps } from "./hooks/useVideoOps";
@@ -467,6 +468,9 @@ export default function HomeClient() {
     label: string;
   }>({ status: "idle", label: "" });
 
+  // ✅ 全域進度面板（真實進度來自輪詢 action items 的完成筆數）
+  const progress = useOperationProgress();
+
   // 全站操作次數顯示
   const videoOpsQ = useVideoOps();
   const operatedTotal = videoOpsQ.data?.total;
@@ -669,6 +673,7 @@ export default function HomeClient() {
 
       setAddLoading(true);
       setActionToast({ status: "loading", label: "新增到播放清單" });
+      progress.track(variables.idempotencyKey);
 
       await queryClient.cancelQueries({
         queryKey: ["playlist-items", targetPlaylistId],
@@ -767,6 +772,7 @@ export default function HomeClient() {
       }
 
       setAddLoading(false);
+      progress.settle(!error);
       setTimeout(
         () =>
           setActionToast((s) => ({
@@ -794,6 +800,7 @@ export default function HomeClient() {
 
       setRemoveLoading(true);
       setActionToast({ status: "loading", label: "從清單移除" });
+      progress.track(variables.idempotencyKey);
 
       await queryClient.cancelQueries({
         queryKey: ["playlist-items", sourcePlaylistId],
@@ -859,6 +866,7 @@ export default function HomeClient() {
       }
 
       setRemoveLoading(false);
+      progress.settle(!error);
       setTimeout(
         () =>
           setActionToast((s) => ({
@@ -882,9 +890,15 @@ export default function HomeClient() {
         body: JSON.stringify(payload),
       }),
 
-    onMutate: async ({ sourcePlaylistId, targetPlaylistId, items }) => {
+    onMutate: async ({
+      sourcePlaylistId,
+      targetPlaylistId,
+      items,
+      idempotencyKey,
+    }) => {
       setMoveLoading(true);
       setActionToast({ status: "loading", label: "一併移轉" });
+      progress.track(idempotencyKey);
 
       await Promise.all([
         queryClient.cancelQueries({
@@ -1014,6 +1028,7 @@ export default function HomeClient() {
       }
 
       setMoveLoading(false);
+      progress.settle(!error);
       setTimeout(
         () =>
           setActionToast((s) => ({
@@ -1093,6 +1108,11 @@ export default function HomeClient() {
     });
     if (!ok) return;
 
+    progress.start({
+      label: "新增到播放清單",
+      expectedTotal: allVideoIds.length,
+    });
+
     addMutation.mutate({
       targetPlaylistId: to,
       videoIds: allVideoIds,
@@ -1139,22 +1159,34 @@ export default function HomeClient() {
     if (!ok) return;
 
     // 逐來源清單執行 move（可序列化送出）
-    Object.entries(selectedMap).forEach(([sourcePlaylistId, set]) => {
-      const itemsInSource =
-        columnsData
-          .find((q) => q.data?.playlist.id === sourcePlaylistId)
-          ?.data?.items.filter((it) => set.has(it.playlistItemId)) ?? [];
-      if (itemsInSource.length > 0) {
-        moveMutation.mutate({
-          sourcePlaylistId,
-          targetPlaylistId: to,
-          items: itemsInSource.map((it) => ({
-            playlistItemId: it.playlistItemId,
-            videoId: it.videoId,
-          })),
-          idempotencyKey: makeIdemKey("move"),
-        });
-      }
+    const moveJobs = Object.entries(selectedMap)
+      .map(([sourcePlaylistId, set]) => ({
+        sourcePlaylistId,
+        items:
+          columnsData
+            .find((q) => q.data?.playlist.id === sourcePlaylistId)
+            ?.data?.items.filter((it) => set.has(it.playlistItemId)) ?? [],
+      }))
+      .filter((job) => job.items.length > 0);
+
+    if (moveJobs.length === 0) return;
+
+    progress.start({
+      label: "一併移轉",
+      expectedTotal: moveJobs.reduce((n, job) => n + job.items.length, 0),
+      jobCount: moveJobs.length,
+    });
+
+    moveJobs.forEach(({ sourcePlaylistId, items }) => {
+      moveMutation.mutate({
+        sourcePlaylistId,
+        targetPlaylistId: to,
+        items: items.map((it) => ({
+          playlistItemId: it.playlistItemId,
+          videoId: it.videoId,
+        })),
+        idempotencyKey: makeIdemKey("move"),
+      });
     });
   };
 
@@ -1185,15 +1217,27 @@ export default function HomeClient() {
     });
     if (!ok) return;
 
-    Object.entries(selectedMap).forEach(([sourcePlaylistId, set]) => {
-      const ids = Array.from(set);
-      if (ids.length > 0) {
-        removeMutation.mutate({
-          playlistItemIds: ids,
-          sourcePlaylistId,
-          idempotencyKey: makeIdemKey("remove"),
-        });
-      }
+    const removeJobs = Object.entries(selectedMap)
+      .map(([sourcePlaylistId, set]) => ({
+        sourcePlaylistId,
+        ids: Array.from(set),
+      }))
+      .filter((job) => job.ids.length > 0);
+
+    if (removeJobs.length === 0) return;
+
+    progress.start({
+      label: "從清單移除",
+      expectedTotal: removeJobs.reduce((n, job) => n + job.ids.length, 0),
+      jobCount: removeJobs.length,
+    });
+
+    removeJobs.forEach(({ sourcePlaylistId, ids }) => {
+      removeMutation.mutate({
+        playlistItemIds: ids,
+        sourcePlaylistId,
+        idempotencyKey: makeIdemKey("remove"),
+      });
     });
   };
 
@@ -1252,6 +1296,15 @@ export default function HomeClient() {
     // 🔹 開始 Undo Loading
     setUndoLoading(true);
     setActionToast({ status: "loading", label: "復原" });
+    progress.start({
+      label: "復原",
+      expectedTotal:
+        lastOp.type === "add"
+          ? lastOp.created.length
+          : lastOp.type === "remove"
+            ? lastOp.videoIds.length
+            : lastOp.toItems.length,
+    });
 
     const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -1260,12 +1313,14 @@ export default function HomeClient() {
         // ✅ 直接用 created 的「真實 playlistItemId」移除
         const ids = lastOp.created.map((p) => p.playlistItemId);
         if (ids.length) {
+          const undoKey = makeIdemKey("undo-remove");
+          progress.track(undoKey);
           await apiRequest<unknown>("/api/bulk/remove", {
             method: "POST",
             body: JSON.stringify({
               sourcePlaylistId: lastOp.targetPlaylistId,
               playlistItemIds: ids,
-              idempotencyKey: makeIdemKey("undo-remove"),
+              idempotencyKey: undoKey,
             }),
           });
         }
@@ -1305,12 +1360,14 @@ export default function HomeClient() {
         );
 
         try {
+          const undoKey = makeIdemKey("undo-add");
+          progress.track(undoKey);
           await apiRequest<AddApiResult>("/api/bulk/add", {
             method: "POST",
             body: JSON.stringify({
               targetPlaylistId: lastOp.sourcePlaylistId,
               videoIds: lastOp.videoIds,
-              idempotencyKey: makeIdemKey("undo-add"),
+              idempotencyKey: undoKey,
             }),
           });
         } catch (e) {
@@ -1352,13 +1409,15 @@ export default function HomeClient() {
         }));
 
         if (pairs.length) {
+          const undoKey = makeIdemKey("undo-move");
+          progress.track(undoKey);
           await apiRequest<MoveApiResult>("/api/bulk/move", {
             method: "POST",
             body: JSON.stringify({
               sourcePlaylistId: lastOp.targetPlaylistId,
               targetPlaylistId: lastOp.sourcePlaylistId,
               items: pairs,
-              idempotencyKey: makeIdemKey("undo-move"),
+              idempotencyKey: undoKey,
             }),
           });
         }
@@ -1402,9 +1461,11 @@ export default function HomeClient() {
       await queryClient.invalidateQueries({ queryKey: ["videoOps"] });
 
       setActionToast({ status: "success", label: "復原" });
+      progress.settle(true);
       setLastOp?.(null);
     } catch (_err) {
       setActionToast({ status: "error", label: "復原" });
+      progress.settle(false);
     } finally {
       // 🔹 結束 Undo Loading
       setUndoLoading(false);
@@ -1568,7 +1629,7 @@ export default function HomeClient() {
               <Button
                 variant="secondary"
                 onClick={onCancelSelect}
-                className="rounded-lg border border-slate-200/60 bg-white/70 text-slate-700 font-medium hover:bg-slate-50 hover:shadow-sm transition-all duration-200"
+                className="rounded-lg border border-slate-200/60 bg-card/70 text-slate-700 font-medium hover:bg-slate-50 hover:shadow-sm transition-all duration-200 dark:border-border/60 dark:text-slate-200 dark:hover:bg-accent"
               >
                 取消
               </Button>

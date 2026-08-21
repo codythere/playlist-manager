@@ -290,6 +290,65 @@ export async function getActionCounts(actionId: string): Promise<ActionCounts> {
   };
 }
 
+/**
+ * 一次取得多筆 action 的即時進度。
+ *
+ * 供進行中的批次操作輪詢用，所以刻意做成單一查詢，避免每個 action 各佔一條
+ * 連線（bulk 路由執行期間會長時間佔用連線池）。
+ * `inserted` 用於 MOVE：插入目標與刪除來源是兩個階段，只看 success 會讓進度
+ * 在前半段完全不動。
+ */
+export interface ActionProgressRecord {
+  id: string;
+  type: ActionType;
+  status: ActionStatus;
+  total: number;
+  success: number;
+  failed: number;
+  inserted: number;
+}
+
+export async function getActionsProgress(
+  actionIds: string[],
+  userId: string,
+): Promise<ActionProgressRecord[]> {
+  if (actionIds.length === 0) return [];
+
+  const { rows } = await query<{
+    id: string;
+    type: ActionType;
+    status: ActionStatus;
+    total: string;
+    success: string;
+    failed: string;
+    inserted: string;
+  }>(
+    `SELECT
+       a.id,
+       a.type,
+       a.status,
+       COUNT(ai.id)::bigint AS total,
+       COALESCE(SUM(CASE WHEN ai.status='success' THEN 1 ELSE 0 END), 0)::bigint AS success,
+       COALESCE(SUM(CASE WHEN ai.status='failed'  THEN 1 ELSE 0 END), 0)::bigint AS failed,
+       COALESCE(SUM(CASE WHEN ai.target_playlist_item_id IS NOT NULL THEN 1 ELSE 0 END), 0)::bigint AS inserted
+     FROM actions a
+     LEFT JOIN action_items ai ON ai.action_id = a.id
+     WHERE a.id = ANY($1::text[]) AND a.user_id = $2
+     GROUP BY a.id, a.type, a.status`,
+    [actionIds, userId],
+  );
+
+  return rows.map((r) => ({
+    id: r.id,
+    type: r.type,
+    status: r.status,
+    total: Number(r.total || 0),
+    success: Number(r.success || 0),
+    failed: Number(r.failed || 0),
+    inserted: Number(r.inserted || 0),
+  }));
+}
+
 /** /api/actions 使用的安全版分頁（抓 limit+1 判斷 hasMore） */
 export async function listActionsPageSafe(
   userId: string,

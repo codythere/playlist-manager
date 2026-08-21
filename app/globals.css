@@ -32,6 +32,15 @@
 
   --ring: 262 82% 58%;
   --radius: 1rem;
+
+  --glow-violet: rgba(139, 92, 246, 0.12);
+  --glow-blue: rgba(59, 130, 246, 0.12);
+
+  --glass-bg: rgba(255, 255, 255, 0.75);
+  --glass-border: rgba(255, 255, 255, 0.6);
+  --glass-shadow: 0 20px 40px -24px rgba(15, 23, 42, 0.35);
+
+  --scrollbar-thumb: rgba(148, 163, 184, 0.65);
 }
 
 .dark {
@@ -63,6 +72,15 @@
   --destructive-foreground: 220 33% 96%;
 
   --ring: 262 92% 66%;
+
+  --glow-violet: rgba(139, 92, 246, 0.18);
+  --glow-blue: rgba(59, 130, 246, 0.16);
+
+  --glass-bg: rgba(24, 28, 44, 0.7);
+  --glass-border: rgba(148, 163, 184, 0.16);
+  --glass-shadow: 0 20px 40px -24px rgba(0, 0, 0, 0.75);
+
+  --scrollbar-thumb: rgba(100, 116, 139, 0.6);
 }
 
 * {
@@ -85,22 +103,17 @@ body {
   @apply bg-background text-foreground antialiased;
   user-select: none;
   background-image:
-    radial-gradient(
-      circle at top left,
-      rgba(139, 92, 246, 0.12),
-      transparent 28%
-    ),
-    radial-gradient(
-      circle at bottom right,
-      rgba(59, 130, 246, 0.12),
-      transparent 24%
-    ),
+    radial-gradient(circle at top left, var(--glow-violet), transparent 28%),
+    radial-gradient(circle at bottom right, var(--glow-blue), transparent 24%),
     hsl(var(--background));
 }
 
 @layer utilities {
   .glass-panel {
-    @apply border border-white/60 bg-white/75 shadow-[0_20px_40px_-24px_rgba(15,23,42,0.35)] backdrop-blur-xl;
+    @apply border backdrop-blur-xl;
+    border-color: var(--glass-border);
+    background-color: var(--glass-bg);
+    box-shadow: var(--glass-shadow);
   }
 
   .soft-ring {
@@ -120,7 +133,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(148, 163, 184, 0.65);
+  background: var(--scrollbar-thumb);
   border-radius: 9999px;
   border: 2px solid transparent;
   background-clip: padding-box;

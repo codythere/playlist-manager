@@ -2,9 +2,11 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { ThemeProvider } from "next-themes";
 import * as React from "react";
 import { ToastProvider } from "@/app/components/ui/use-toast";
 import { Toaster } from "@/app/components/ui/toast";
+import { OperationProgressProvider } from "@/app/components/progress/OperationProgress";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = React.useState(
@@ -33,12 +35,20 @@ export function Providers({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <ToastProvider>
-        {children}
-        <Toaster />
-      </ToastProvider>
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="dark"
+      enableSystem
+      disableTransitionOnChange
+      storageKey="ytpm-theme"
+    >
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>
+          <OperationProgressProvider>{children}</OperationProgressProvider>
+          <Toaster />
+        </ToastProvider>
+        <ReactQueryDevtools initialIsOpen={false} />
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }

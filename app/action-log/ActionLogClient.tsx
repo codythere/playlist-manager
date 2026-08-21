@@ -279,13 +279,13 @@ function Badge({
 }) {
   const map: Record<typeof color, string> = {
     green:
-      "bg-emerald-100/70 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-200/50",
+      "bg-emerald-100/70 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 border border-emerald-200/50 dark:border-emerald-500/25",
     yellow:
-      "bg-amber-100/70 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200/50",
-    red: "bg-rose-100/70 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300 border border-rose-200/50",
+      "bg-amber-100/70 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200/50 dark:border-amber-500/25",
+    red: "bg-rose-100/70 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300 border border-rose-200/50 dark:border-rose-500/25",
     slate:
-      "bg-slate-100/70 text-slate-700 dark:bg-slate-900/30 dark:text-slate-300 border border-slate-200/50",
-    blue: "bg-blue-100/70 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200/50",
+      "bg-slate-100/70 text-slate-700 dark:bg-slate-900/30 dark:text-slate-300 border border-slate-200/50 dark:border-slate-500/25",
+    blue: "bg-blue-100/70 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200/50 dark:border-blue-500/25",
   };
   return (
     <span
@@ -393,7 +393,7 @@ function SectionTitle({
 
 function CardShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-slate-200/50 bg-white/60 backdrop-blur-sm shadow-[0_4px_12px_-4px_rgba(15,23,42,0.1)] transition-all duration-200 hover:shadow-[0_8px_20px_-6px_rgba(15,23,42,0.15)] hover:border-slate-200/70">
+    <div className="rounded-xl border border-slate-200/50 bg-card/60 backdrop-blur-sm shadow-[0_4px_12px_-4px_rgba(15,23,42,0.1)] transition-all duration-200 hover:shadow-[0_8px_20px_-6px_rgba(15,23,42,0.15)] hover:border-slate-200/70 dark:border-border/60 dark:hover:border-border">
       {children}
     </div>
   );
@@ -485,9 +485,9 @@ export default function ActionLogClient() {
 
   if (actionsQuery.isLoading) {
     return (
-      <div className="relative min-h-screen bg-gradient-to-br from-white via-slate-50/50 to-slate-100/30">
+      <div className="relative min-h-screen bg-gradient-to-br from-white via-slate-50/50 to-slate-100/30 dark:bg-none">
         {/* Decorative background */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-violet-100/40 to-purple-100/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-violet-100/40 to-purple-100/20 dark:from-violet-500/10 dark:to-purple-500/5 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 mx-auto max-w-6xl p-6">
           <SectionTitle icon={List} title="Action Log" />
@@ -505,7 +505,7 @@ export default function ActionLogClient() {
     const error = actionsQuery.error as ApiError;
     if (error.code === "unauthorized") {
       return (
-        <div className="relative min-h-screen bg-gradient-to-br from-white via-slate-50/50 to-slate-100/30 flex items-center justify-center">
+        <div className="relative min-h-screen bg-gradient-to-br from-white via-slate-50/50 to-slate-100/30 dark:bg-none flex items-center justify-center">
           <div className="relative z-10 text-center">
             <div className="mb-4 text-5xl">🔐</div>
             <p className="text-lg text-muted-foreground font-medium">
@@ -516,7 +516,7 @@ export default function ActionLogClient() {
       );
     }
     return (
-      <div className="relative min-h-screen bg-gradient-to-br from-white via-slate-50/50 to-slate-100/30 flex items-center justify-center">
+      <div className="relative min-h-screen bg-gradient-to-br from-white via-slate-50/50 to-slate-100/30 dark:bg-none flex items-center justify-center">
         <div className="relative z-10 text-center">
           <div className="mb-4 text-5xl">⚠️</div>
           <p className="text-lg text-destructive font-medium">
@@ -529,9 +529,9 @@ export default function ActionLogClient() {
 
   if (!actions.length) {
     return (
-      <div className="relative min-h-screen bg-gradient-to-br from-white via-slate-50/50 to-slate-100/30">
+      <div className="relative min-h-screen bg-gradient-to-br from-white via-slate-50/50 to-slate-100/30 dark:bg-none">
         {/* Decorative background */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-violet-100/40 to-purple-100/20 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-violet-100/40 to-purple-100/20 dark:from-violet-500/10 dark:to-purple-500/5 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 mx-auto max-w-6xl p-6">
           <SectionTitle icon={List} title="Action Log" />
@@ -554,10 +554,10 @@ export default function ActionLogClient() {
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-white via-slate-50/50 to-slate-100/30">
+    <div className="relative min-h-screen bg-gradient-to-br from-white via-slate-50/50 to-slate-100/30 dark:bg-none">
       {/* Decorative background elements */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-violet-100/40 to-purple-100/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-1/2 w-80 h-80 bg-gradient-to-tr from-blue-100/30 to-violet-100/20 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-violet-100/40 to-purple-100/20 dark:from-violet-500/10 dark:to-purple-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 left-1/2 w-80 h-80 bg-gradient-to-tr from-blue-100/30 to-violet-100/20 dark:from-blue-500/10 dark:to-violet-500/5 rounded-full blur-3xl pointer-events-none" />
 
       <div className="relative z-10 mx-auto max-w-6xl px-6 py-8">
         {/* Header */}
@@ -575,7 +575,7 @@ export default function ActionLogClient() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-slate-600">
+                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
                     Size
                   </span>
                   <DropdownSelect
@@ -734,7 +734,7 @@ function ActionCard({
               <button
                 type="button"
                 onClick={toggle}
-                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold text-violet-600 hover:bg-violet-50 transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold text-violet-600 hover:bg-violet-50 transition-colors dark:text-violet-300 dark:hover:bg-violet-500/10"
                 aria-expanded={expanded}
               >
                 {icon}
@@ -747,7 +747,7 @@ function ActionCard({
             {/* Timeline info */}
             <div className="text-xs text-muted-foreground space-y-1">
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                <Calendar className="w-4 h-4 text-slate-400 flex-shrink-0 dark:text-slate-500" />
                 <span>
                   Created{" "}
                   <span className="font-semibold">
@@ -767,14 +767,14 @@ function ActionCard({
               <div className="flex flex-wrap items-center gap-2 text-xs">
                 <span className="inline-flex items-center gap-1">
                   <span className="opacity-60">From:</span>
-                  <span className="truncate font-medium text-slate-700">
+                  <span className="truncate font-medium text-slate-700 dark:text-slate-200">
                     {sourceName}
                   </span>
                 </span>
                 <span className="opacity-40">→</span>
                 <span className="inline-flex items-center gap-1">
                   <span className="opacity-60">To:</span>
-                  <span className="truncate font-medium text-slate-700">
+                  <span className="truncate font-medium text-slate-700 dark:text-slate-200">
                     {targetName}
                   </span>
                 </span>
@@ -928,7 +928,7 @@ function ActionDetails({
       )}
     >
       <div className="min-h-0">
-        <div className="mt-4 space-y-4 rounded-lg border border-slate-200/30 bg-gradient-to-br from-slate-50/50 to-slate-100/30 backdrop-blur-sm p-4">
+        <div className="mt-4 space-y-4 rounded-lg border border-slate-200/30 bg-gradient-to-br from-slate-50/50 to-slate-100/30 backdrop-blur-sm p-4 dark:border-border/60 dark:bg-none dark:bg-muted/25">
           {/* Action buttons row */}
           <div className="flex flex-wrap items-center gap-2">
             <Button
