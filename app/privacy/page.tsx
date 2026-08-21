@@ -148,10 +148,68 @@ export default function PrivacyPage() {
 
         <hr />
 
-        {/* Section 4 */}
+        {/* Section 4 (NEW) */}
         <section className="space-y-4">
           <h2 className="text-xl font-semibold">
-            四、不進行的行為（What the Service Does NOT Do）
+            四、資料保存與刪除（Data Retention & Deletion）
+          </h2>
+
+          <h3 className="font-medium">1. 保存期間（Retention Period）</h3>
+          <p>
+            Token（Access Token / Refresh Token）於使用者在本服務內
+            <strong>主動登出時立即從資料庫中刪除</strong>。
+          </p>
+          <p>
+            若使用者透過 Google 帳戶頁面撤銷授權，該 Token
+            會立即失效，本服務將無法再使用該 Token 存取任何 Google 資料。
+            該筆失效的 Token
+            記錄將保留於資料庫中，直至使用者於本服務內執行登出動作，
+            屆時系統會將其永久刪除。
+          </p>
+          <p>
+            播放清單操作紀錄（Action Logs）用於提供操作歷史、Undo
+            回滾與錯誤診斷功能，於使用者刪除帳號或提出刪除請求時，將一併移除。
+          </p>
+          <p className="text-neutral-600">
+            Tokens (Access Token / Refresh Token) are permanently deleted from
+            our database when the user logs out within the Service. If a user
+            revokes access via their Google Account page, the token becomes
+            invalid immediately and can no longer be used to access any Google
+            data. The invalidated token record remains in our database until the
+            user logs out within the Service, at which point it is permanently
+            deleted. Playlist action logs, used for undo functionality and error
+            diagnostics, are removed upon account deletion or a user's deletion
+            request.
+          </p>
+
+          <h3 className="font-medium">
+            2. 資料刪除請求（Data Deletion Requests）
+          </h3>
+          <p>使用者可透過以下任一方式，確保其資料被刪除：</p>
+          <ul className="list-disc pl-6 space-y-2">
+            <li>於本服務內點選登出，系統將立即刪除該帳號的 Token 紀錄</li>
+            <li>
+              來信至 <strong>codylai0217@gmail.com</strong> 提出刪除請求，
+              我們將於收到請求後 <strong>7 個工作天內</strong>
+              完成所有相關資料（包含 Token 與操作紀錄）的刪除，並回覆確認
+            </li>
+          </ul>
+          <p className="text-neutral-600">
+            Users can ensure their data is deleted by either logging out within
+            the Service (tokens are deleted immediately), or by emailing{" "}
+            <strong>codylai0217@gmail.com</strong> to request deletion. We will
+            complete the deletion of all associated data (including tokens and
+            action logs) within <strong>7 business days</strong>, with
+            confirmation sent via email.
+          </p>
+        </section>
+
+        <hr />
+
+        {/* Section 5 */}
+        <section className="space-y-4">
+          <h2 className="text-xl font-semibold">
+            五、不進行的行為（What the Service Does NOT Do）
           </h2>
           <ul className="list-disc pl-6 space-y-2">
             <li>不會出售或分享任何 YouTube Data</li>
@@ -163,10 +221,10 @@ export default function PrivacyPage() {
 
         <hr />
 
-        {/* Section 5 */}
+        {/* Section 6 */}
         <section className="space-y-4">
           <h2 className="text-xl font-semibold">
-            五、第三方服務（Third-Party Services）
+            六、第三方服務（Third-Party Services）
           </h2>
           <p>本服務依賴：</p>
           <ul className="list-disc pl-6 space-y-2">
