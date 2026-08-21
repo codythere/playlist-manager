@@ -206,6 +206,9 @@ export function AppShell({
                   />
                 </div>
                 <span className="hidden sm:inline">Playlist Manager</span>
+                <span className="rounded-full border border-violet-500/40 bg-violet-500/15 px-2.5 py-1 text-xs font-semibold text-violet-700 dark:text-violet-200">
+                  🎉 Beta 免費試用中
+                </span>
               </div>
 
               {/* 右側：主題切換 + 使用者區塊（用 React Query 的 auth 狀態） */}
