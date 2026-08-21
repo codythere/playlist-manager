@@ -303,28 +303,28 @@ function Badge({
 function StatusBadge({ status }: { status: ActionRecord["status"] }) {
   if (status === "success")
     return (
-      <Badge color="green" title="Success">
+      <Badge color="green" title="成功">
         <CheckCircle2 className="h-3.5 w-3.5" />
-        SUCCESS
+        成功
       </Badge>
     );
   if (status === "failed")
     return (
-      <Badge color="red" title="Failed">
+      <Badge color="red" title="失敗">
         <XCircle className="h-3.5 w-3.5" />
-        FAILED
+        失敗
       </Badge>
     );
   if (status === "running")
     return (
-      <Badge color="yellow" title="Running">
+      <Badge color="yellow" title="進行中">
         <Clock className="h-3.5 w-3.5" />
-        RUNNING
+        進行中
       </Badge>
     );
   return (
     <Badge color="slate" title={status}>
-      {status.toUpperCase()}
+      {status === "partial" ? "部分成功" : status === "pending" ? "等待中" : status}
     </Badge>
   );
 }
@@ -335,7 +335,16 @@ function TypeBadge({ type }: { type: ActionRecord["type"] }) {
   const t = String(type).toLowerCase();
   const color: BadgeColor =
     t === "add" ? "blue" : t === "move" ? "yellow" : "slate";
-  const label = typeof type === "string" ? type.toUpperCase() : String(type);
+  const label =
+    t === "add"
+      ? "新增"
+      : t === "remove"
+        ? "移除"
+        : t === "move"
+          ? "移轉"
+          : t === "undo"
+            ? "復原"
+            : String(type);
   return <Badge color={color}>{label}</Badge>;
 }
 
@@ -347,19 +356,19 @@ function CopyButton({ text, className }: { text: string; className?: string }) {
       onClick={async () => {
         try {
           await navigator.clipboard.writeText(text);
-          toast({ title: "Copied", duration: 1200 });
+          toast({ title: "已複製", duration: 1200 });
         } catch {
-          toast({ title: "Copy failed", duration: 1500 });
+          toast({ title: "複製失敗", duration: 1500 });
         }
       }}
       className={cn(
         "inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-[11px] text-muted-foreground hover:bg-muted",
         className,
       )}
-      title="Copy"
+      title="複製"
     >
       <Copy className="h-3.5 w-3.5" />
-      Copy
+      複製
     </button>
   );
 }
@@ -490,7 +499,7 @@ export default function ActionLogClient() {
         <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-violet-100/40 to-purple-100/20 dark:from-violet-500/10 dark:to-purple-500/5 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 mx-auto max-w-6xl p-6">
-          <SectionTitle icon={List} title="Action Log" />
+          <SectionTitle icon={List} title="操作紀錄" />
           <div className="mt-8 space-y-3">
             <SkeletonRow />
             <SkeletonRow />
@@ -509,7 +518,7 @@ export default function ActionLogClient() {
           <div className="relative z-10 text-center">
             <div className="mb-4 text-5xl">🔐</div>
             <p className="text-lg text-muted-foreground font-medium">
-              Sign in to view your recent actions.
+              請登入後查看近期操作紀錄。
             </p>
           </div>
         </div>
@@ -520,7 +529,7 @@ export default function ActionLogClient() {
         <div className="relative z-10 text-center">
           <div className="mb-4 text-5xl">⚠️</div>
           <p className="text-lg text-destructive font-medium">
-            {error.message || "Failed to load actions"}
+            {error.message || "無法載入操作紀錄"}
           </p>
         </div>
       </div>
@@ -534,16 +543,16 @@ export default function ActionLogClient() {
         <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-violet-100/40 to-purple-100/20 dark:from-violet-500/10 dark:to-purple-500/5 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 mx-auto max-w-6xl p-6">
-          <SectionTitle icon={List} title="Action Log" />
+          <SectionTitle icon={List} title="操作紀錄" />
           <div className="mt-8 flex items-center justify-center">
             <CardShell>
               <div className="flex flex-col items-center gap-3 px-8 py-12 text-center">
                 <div className="text-5xl">📋</div>
                 <p className="text-base font-medium text-foreground">
-                  No actions recorded yet
+                  尚無操作紀錄
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Run a bulk add/move/remove to populate history.
+                  執行批次新增／移轉／移除後，紀錄會顯示在這裡。
                 </p>
               </div>
             </CardShell>
@@ -564,22 +573,22 @@ export default function ActionLogClient() {
         <div className="mb-8">
           <SectionTitle
             icon={List}
-            title="Action Log"
+            title="操作紀錄"
             right={
               <div className="flex flex-wrap items-center gap-4 md:gap-6 text-sm">
                 <div className="hidden items-center gap-2 text-muted-foreground sm:flex">
                   <Clock className="h-5 w-5" />
                   <span className="font-medium">
-                    Pages: {actionsQuery.data?.pages.length ?? 1}
+                    頁數：{actionsQuery.data?.pages.length ?? 1}
                   </span>
                 </div>
 
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
-                    Size
+                    每頁筆數
                   </span>
                   <DropdownSelect
-                    aria-label="Page size"
+                    aria-label="每頁筆數"
                     value={String(pageSize)}
                     onValueChange={(val) => {
                       const next = Number(val);
@@ -599,10 +608,10 @@ export default function ActionLogClient() {
                   size="sm"
                   onClick={() => window.location.reload()}
                   className="inline-flex items-center gap-2 rounded-lg"
-                  title="Refresh data"
+                  title="重新整理"
                 >
                   <RefreshCw className="h-4 w-4" />
-                  <span className="hidden sm:inline">Refresh</span>
+                  <span className="hidden sm:inline">重新整理</span>
                 </Button>
               </div>
             }
@@ -659,10 +668,10 @@ export default function ActionLogClient() {
                       d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
-                  Loading...
+                  載入中...
                 </span>
               ) : (
-                "Load more"
+                "載入更多"
               )}
             </Button>
           </div>
@@ -739,7 +748,7 @@ function ActionCard({
               >
                 {icon}
                 <span className="hidden sm:inline">
-                  {expanded ? "Hide" : "Show"} items
+                  {expanded ? "收合項目" : "顯示項目"}
                 </span>
               </button>
             </div>
@@ -749,14 +758,14 @@ function ActionCard({
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4 text-slate-400 flex-shrink-0 dark:text-slate-500" />
                 <span>
-                  Created{" "}
+                  建立於{" "}
                   <span className="font-semibold">
                     {formatTimestamp(action.createdAt)}
                   </span>
                 </span>
                 <span className="opacity-40">•</span>
                 <span>
-                  Finished{" "}
+                  完成於{" "}
                   <span className="font-semibold">
                     {formatTimestamp(action.finishedAt)}
                   </span>
@@ -766,14 +775,14 @@ function ActionCard({
               {/* Source and target */}
               <div className="flex flex-wrap items-center gap-2 text-xs">
                 <span className="inline-flex items-center gap-1">
-                  <span className="opacity-60">From:</span>
+                  <span className="opacity-60">來源：</span>
                   <span className="truncate font-medium text-slate-700 dark:text-slate-200">
                     {sourceName}
                   </span>
                 </span>
                 <span className="opacity-40">→</span>
                 <span className="inline-flex items-center gap-1">
-                  <span className="opacity-60">To:</span>
+                  <span className="opacity-60">目標：</span>
                   <span className="truncate font-medium text-slate-700 dark:text-slate-200">
                     {targetName}
                   </span>
@@ -782,7 +791,7 @@ function ActionCard({
 
               {action.parentActionId ? (
                 <div className="text-[10px] opacity-50 font-mono">
-                  Parent: {action.parentActionId}
+                  上層操作：{action.parentActionId}
                 </div>
               ) : null}
             </div>
@@ -791,15 +800,15 @@ function ActionCard({
           {/* Right side - Stats */}
           <div className="shrink-0 flex flex-col gap-2">
             <div className="flex items-center gap-1.5 text-xs">
-              <Badge color="green" title="Successful items">
+              <Badge color="green" title="成功項目">
                 <CheckCircle2 className="h-3.5 w-3.5" />
                 {counts.success}
               </Badge>
-              <Badge color="red" title="Failed items">
+              <Badge color="red" title="失敗項目">
                 <XCircle className="h-3.5 w-3.5" />
                 {counts.failed}
               </Badge>
-              <Badge color="slate" title="Total items">
+              <Badge color="slate" title="項目總數">
                 <List className="h-3.5 w-3.5" />
                 {counts.total}
               </Badge>
@@ -889,7 +898,7 @@ function ActionDetails({
         { method: "POST" },
       ),
     onSuccess: () => {
-      toast({ title: "Retry scheduled", duration: 3000 });
+      toast({ title: "已排程重試", duration: 3000 });
       queryClient.invalidateQueries({ queryKey: ["actions"] });
       queryClient.invalidateQueries({ queryKey: ["action-summary", actionId] });
       queryClient.invalidateQueries({ queryKey: ["action-items", actionId] });
@@ -897,8 +906,8 @@ function ActionDetails({
     },
     onError: (error: unknown) => {
       const message =
-        error instanceof Error ? error.message : "Unable to retry";
-      toast({ title: "Retry failed", description: message, duration: 4000 });
+        error instanceof Error ? error.message : "無法重試";
+      toast({ title: "重試失敗", description: message, duration: 4000 });
     },
   });
 
@@ -908,15 +917,15 @@ function ActionDetails({
         method: "POST",
       }),
     onSuccess: () => {
-      toast({ title: "Undo scheduled", duration: 3000 });
+      toast({ title: "已排程復原", duration: 3000 });
       queryClient.invalidateQueries({ queryKey: ["actions"] });
       queryClient.invalidateQueries({ queryKey: ["action-summary", actionId] });
       queryClient.invalidateQueries({ queryKey: ["action-items", actionId] });
       onRefetch();
     },
     onError: (error: unknown) => {
-      const message = error instanceof Error ? error.message : "Unable to undo";
-      toast({ title: "Undo failed", description: message, duration: 4000 });
+      const message = error instanceof Error ? error.message : "無法復原";
+      toast({ title: "復原失敗", description: message, duration: 4000 });
     },
   });
 
@@ -939,7 +948,7 @@ function ActionDetails({
               className="inline-flex items-center gap-2 rounded-lg"
             >
               <RefreshCw className="h-4 w-4" />
-              Retry failed
+              重試失敗項目
             </Button>
             <Button
               variant="outline"
@@ -949,15 +958,15 @@ function ActionDetails({
               className="inline-flex items-center gap-2 rounded-lg"
             >
               <Undo2 className="h-4 w-4" />
-              Undo
+              復原
             </Button>
 
             <div className="ml-auto flex items-center gap-2 text-xs">
               <span className="text-muted-foreground font-medium">
-                Items per page
+                每頁項目數
               </span>
               <DropdownSelect
-                aria-label="Items per page"
+                aria-label="每頁項目數"
                 value={String(itemPageSize)}
                 onValueChange={(val) => {
                   const next = Number(val);
@@ -978,12 +987,12 @@ function ActionDetails({
           {/* Summary loading state */}
           {summaryQuery.isLoading ? (
             <div className="text-xs text-muted-foreground py-2">
-              Loading summary...
+              載入摘要中...
             </div>
           ) : summaryQuery.isError ? (
             <div className="text-xs text-destructive py-2">
               {(summaryQuery.error as Error).message ??
-                "Failed to load action summary"}
+                "無法載入操作摘要"}
             </div>
           ) : null}
 
@@ -997,23 +1006,23 @@ function ActionDetails({
           ) : itemsQuery.isError ? (
             <div className="text-xs text-destructive">
               {(itemsQuery.error as Error).message ??
-                "Failed to load action items"}
+                "無法載入操作項目"}
             </div>
           ) : items.length === 0 ? (
             <div className="text-xs text-muted-foreground">
-              No recorded items.
+              沒有記錄的項目。
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[760px] text-sm">
                 <thead className="sticky top-0 z-10 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
                   <tr className="text-left text-[12px] uppercase tracking-wide text-muted-foreground">
-                    <th className="py-2 pr-3">Type</th>
-                    <th className="py-2 pr-3">Status</th>
-                    <th className="py-2 pr-3">Source</th>
-                    <th className="py-2 pr-3">Target</th>
-                    <th className="py-2 pr-3">Video</th>
-                    <th className="py-2">Error</th>
+                    <th className="py-2 pr-3">類型</th>
+                    <th className="py-2 pr-3">狀態</th>
+                    <th className="py-2 pr-3">來源</th>
+                    <th className="py-2 pr-3">目標</th>
+                    <th className="py-2 pr-3">影片</th>
+                    <th className="py-2">錯誤</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y">
@@ -1047,15 +1056,25 @@ function ActionDetails({
                           idx % 2 === 1 ? "bg-muted/20" : "",
                         )}
                       >
-                        <td className="py-2 pr-3 font-medium">{it.type}</td>
+                        <td className="py-2 pr-3 font-medium">
+                          {String(it.type).toLowerCase() === "add"
+                            ? "新增"
+                            : String(it.type).toLowerCase() === "remove"
+                              ? "移除"
+                              : String(it.type).toLowerCase() === "move"
+                                ? "移轉"
+                                : String(it.type).toLowerCase() === "undo"
+                                  ? "復原"
+                                  : it.type}
+                        </td>
                         <td className="py-2 pr-3">
                           {it.status === "success" ? (
-                            <Badge color="green">SUCCESS</Badge>
+                            <Badge color="green">成功</Badge>
                           ) : it.status === "failed" ? (
-                            <Badge color="red">FAILED</Badge>
+                            <Badge color="red">失敗</Badge>
                           ) : (
                             <Badge color="yellow">
-                              {it.status.toUpperCase()}
+                              {it.status === "pending" ? "等待中" : it.status}
                             </Badge>
                           )}
                         </td>
@@ -1106,8 +1125,8 @@ function ActionDetails({
                     className="rounded-lg"
                   >
                     {itemsQuery.isFetchingNextPage
-                      ? "Loading..."
-                      : "Load more items"}
+                      ? "載入中..."
+                      : "載入更多項目"}
                   </Button>
                 </div>
               ) : null}

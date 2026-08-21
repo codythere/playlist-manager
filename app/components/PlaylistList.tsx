@@ -29,7 +29,7 @@ export function PlaylistList({
   if (isLoading) {
     return (
       <div className="rounded-2xl border border-dashed border-border bg-card/50 p-8 text-center text-sm text-muted-foreground shadow-sm backdrop-blur-sm">
-        Loading playlists
+        載入播放清單中…
       </div>
     );
   }
@@ -37,7 +37,7 @@ export function PlaylistList({
   if (!playlists.length) {
     return (
       <div className="rounded-2xl border border-dashed border-border bg-card/50 p-8 text-center text-sm text-muted-foreground shadow-sm backdrop-blur-sm">
-        No playlists found.
+        找不到播放清單。
       </div>
     );
   }
@@ -74,7 +74,7 @@ export function PlaylistList({
                   e.stopPropagation();
                   onToggleSelect?.(playlist.id, !isChecked);
                 }}
-                aria-label={isChecked ? "Unselect playlist" : "Select playlist"}
+                aria-label={isChecked ? "取消選取播放清單" : "選取播放清單"}
                 className={cn(
                   "absolute right-3 top-3 z-10 flex h-7 w-7 items-center justify-center rounded-full bg-card/95 shadow-[0_8px_18px_-12px_rgba(15,23,42,0.9)] transition-all duration-200",
                 )}
@@ -114,7 +114,7 @@ export function PlaylistList({
                 </div>
               ) : (
                 <div className="flex h-36 w-full items-center justify-center bg-gradient-to-br from-slate-100 to-violet-100 text-sm font-medium text-muted-foreground dark:from-slate-800 dark:to-violet-950/60">
-                  No thumbnail
+                  無縮圖
                 </div>
               )}
               <div className="flex flex-1 flex-col gap-2 px-4 py-3">
@@ -123,9 +123,9 @@ export function PlaylistList({
                 </div>
                 <div className="flex items-center justify-between text-[11px] text-muted-foreground">
                   <span className="rounded-full bg-violet-100 px-2 py-1 font-medium text-violet-700 dark:bg-violet-500/10 dark:text-violet-200">
-                    {playlist.itemCount} items
+                    {playlist.itemCount} 部影片
                   </span>
-                  <span>Open</span>
+                  <span>開啟</span>
                 </div>
               </div>
             </Card>

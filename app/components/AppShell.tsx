@@ -87,6 +87,18 @@ export function AppShell({
     [pathname],
   );
 
+  // 登入頁不套用完整側欄／頂欄，避免品牌重複與版面空蕩
+  if (pathname === "/login") {
+    return (
+      <div className="relative min-h-screen">
+        <div className="absolute right-4 top-4 z-10">
+          <ThemeToggle />
+        </div>
+        {children}
+      </div>
+    );
+  }
+
   const navLinkClass = (active: boolean) =>
     cn(
       "flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
@@ -112,7 +124,7 @@ export function AppShell({
 
       <Link href="/" className={navLinkClass(isActive("/"))}>
         <ListMusic className="h-4 w-4" />
-        Playlist Manager
+        播放清單管理
       </Link>
 
       <Link
@@ -120,7 +132,7 @@ export function AppShell({
         className={navLinkClass(isActive("/action-log"))}
       >
         <History className="h-4 w-4" />
-        Action Log
+        操作紀錄
       </Link>
     </nav>
   );
@@ -147,7 +159,7 @@ export function AppShell({
         <SheetContent side="left" className="w-64 p-0">
           <SheetHeader>
             <VisuallyHidden>
-              <SheetTitle>Navigation</SheetTitle>
+              <SheetTitle>導覽選單</SheetTitle>
             </VisuallyHidden>
           </SheetHeader>
           {NavItems}
@@ -166,7 +178,7 @@ export function AppShell({
             <div className="mx-auto flex h-16 w-full max-w-[1500px] items-center gap-2 px-4 md:px-6">
               {/* 手機：打開 Sheet */}
               <button
-                aria-label="Open navigation"
+                aria-label="開啟導覽選單"
                 className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border/80 bg-background/60 text-foreground shadow-sm hover:bg-accent md:hidden"
                 onClick={() => setMobileOpen(true)}
               >
@@ -175,7 +187,7 @@ export function AppShell({
 
               {/* 桌機：切換固定側欄 */}
               <button
-                aria-label="Toggle sidebar"
+                aria-label="切換側邊欄"
                 aria-expanded={desktopOpen}
                 className="hidden h-9 w-9 items-center justify-center rounded-xl border border-border/80 bg-background/60 text-foreground shadow-sm hover:bg-accent md:inline-flex"
                 onClick={() => setDesktopOpen((v) => !v)}
@@ -221,7 +233,7 @@ export function AppShell({
                       )
                     }
                   >
-                    Login
+                    登入
                   </button>
                 )}
               </div>

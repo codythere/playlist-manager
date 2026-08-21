@@ -1575,30 +1575,28 @@ export default function HomeClient() {
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
   if (!mounted) {
-    return <div className="p-6 text-sm text-muted-foreground">Loading…</div>;
+    return <div className="p-6 text-sm text-muted-foreground">載入中…</div>;
   }
 
   if (authQ.isLoading)
-    return <div className="p-6 text-sm text-muted-foreground">Loading…</div>;
+    return <div className="p-6 text-sm text-muted-foreground">載入中…</div>;
   if (authQ.isError || !auth) {
     return (
       <div className="p-6 text-sm text-destructive">
-        Failed to load authentication status. Please refresh.
+        無法載入登入狀態，請重新整理頁面。
       </div>
     );
   }
   if (!auth.authenticated) {
     return (
       <div className="mx-auto max-w-2xl space-y-4 rounded-lg border bg-card p-6 shadow-sm">
-        <h1 className="text-xl font-semibold">
-          Sign in to manage your playlists
-        </h1>
+        <h1 className="text-xl font-semibold">登入以管理你的播放清單</h1>
         <p className="text-sm text-muted-foreground">
-          Connect your Google account to fetch playlists and run bulk operations
-          with the YouTube Data API.
+          連結 Google 帳號後，即可透過 YouTube Data API
+          讀取播放清單並執行批次操作。
         </p>
         <div className="flex gap-2">
-          <Button onClick={handleLogin}>Sign in with Google</Button>
+          <Button onClick={handleLogin}>使用 Google 登入</Button>
         </div>
       </div>
     );
@@ -1634,9 +1632,9 @@ export default function HomeClient() {
                 取消
               </Button>
               <Button
+                className="rounded-lg bg-violet-600 text-white font-medium hover:bg-violet-700 shadow-none disabled:opacity-50 disabled:hover:bg-violet-600 transition-all duration-200"
                 onClick={onConfirmSelect}
                 disabled={checkedPlaylistIds.size === 0}
-                className="rounded-lg bg-violet-600 text-white font-medium hover:bg-violet-700 shadow-sm hover:shadow-[0_6px_14px_-4px_rgba(109,40,217,0.35)] disabled:opacity-50 disabled:hover:shadow-sm disabled:hover:bg-violet-600 transition-all duration-200"
               >
                 確認
               </Button>

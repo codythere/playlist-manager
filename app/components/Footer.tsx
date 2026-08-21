@@ -10,7 +10,7 @@ export function Footer() {
 
   return (
     <footer
-      aria-label="Legal and safety notes"
+      aria-label="頁尾法務與安全說明"
       className="mt-10 border-t px-4 py-6 text-xs text-muted-foreground"
     >
       <div className="mx-auto max-w-screen-xl space-y-4 leading-relaxed">

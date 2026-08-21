@@ -34,7 +34,7 @@ export function ProgressToast({
     if (status === "error") {
       toast({
         title: `${actionLabel} 失敗`,
-        description: errorMessage ?? "可至『事件追蹤』查看詳細錯誤。",
+        description: errorMessage ?? "可至『操作紀錄』查看詳細錯誤。",
         duration: 5000,
       });
       return;

@@ -2,10 +2,9 @@
 "use client";
 
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { Button } from "@/app/components/ui/button";
-import { cn } from "@/lib/utils";
 
 export default function LoginClient({
   redirectTo = "/",
@@ -16,13 +15,11 @@ export default function LoginClient({
   error?: string | null;
   hintEmail?: string | null;
 }) {
-  const router = useRouter();
   const [loading, setLoading] = React.useState(false);
 
   const handleGoogle = async () => {
     try {
       setLoading(true);
-      // 如果你的 /api/auth/login 支援 redirect 參數，就帶上
       const url = new URL("/api/auth/login", window.location.origin);
       if (redirectTo) url.searchParams.set("redirect", redirectTo);
       window.location.href = url.toString();
@@ -32,65 +29,67 @@ export default function LoginClient({
   };
 
   return (
-    <div className="grid place-items-center px-6 pt-[120px]">
-      <div className="w-full max-w-sm rounded-2xl border bg-card p-6 shadow-sm">
-        {/* Logo + Title */}
-        <div className="mb-6 flex items-center gap-2">
-          <Image src="/logo.png" alt="App Logo" width={24} height={24} />
-          <div className="text-base font-semibold">Playlist Manager</div>
+    <div className="grid min-h-screen place-items-center px-6 py-16">
+      <div className="w-full max-w-sm rounded-2xl border border-border/70 bg-card/90 p-8 text-center shadow-sm backdrop-blur-sm">
+        <div className="mb-8 flex items-center justify-center gap-2.5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 via-indigo-500 to-blue-500 shadow-md shadow-violet-500/25">
+            <Image src="/logo.png" alt="" width={18} height={18} />
+          </div>
+          <div className="text-base font-semibold tracking-tight">
+            Playlist Manager
+          </div>
         </div>
 
-        <h1 className="mb-1 text-xl font-semibold">Sign in</h1>
-        <p className="mb-4 text-sm text-muted-foreground">
-          Use your Google account to optimize your playlists.
+        <h1 className="mb-2 text-2xl font-semibold tracking-tight">登入</h1>
+        <p className="mb-6 text-sm leading-6 text-muted-foreground">
+          使用 Google 帳號登入
+          <br />
+          以便管理與優化你的播放清單。
         </p>
 
-        {/* 錯誤訊息（可選） */}
         {error ? (
-          <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-sm text-destructive">
+          <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-left text-sm text-destructive">
             {error === "oauth_denied"
-              ? "You cancelled the authorization. Please try again."
+              ? "你已取消授權，請再試一次。"
               : error}
           </div>
         ) : null}
 
-        {/* Email 提示（可選） */}
         {hintEmail ? (
           <div className="mb-3 text-xs text-muted-foreground">
-            Continue as <b>{hintEmail}</b>
+            繼續使用 <b>{hintEmail}</b>
           </div>
         ) : null}
 
-        <div className="space-y-3">
-          <Button
-            className="w-full justify-center"
-            onClick={handleGoogle}
-            aria-label="Sign in with Google"
-            disabled={loading}
-          >
-            {loading ? (
-              "Redirecting…"
-            ) : (
-              <span className="inline-flex items-center gap-2">
-                {/* 你可以換成自己的 SVG，這裡用 next/image 引入本地圖檔亦可 */}
-                {/* <Image
-                  src="/google.svg"
-                  alt=""
-                  width={24}
-                  height={24}
-                  aria-hidden
-                /> */}
-                Sign in with Google
-              </span>
-            )}
-          </Button>
+        <Button
+          variant="ghost"
+          className="w-full justify-center bg-violet-600 text-white hover:bg-violet-500 hover:text-white"
+          style={{ boxShadow: "none" }}
+          onClick={handleGoogle}
+          aria-label="使用 Google 登入"
+          disabled={loading}
+        >
+          {loading ? "導向中…" : "使用 Google 登入"}
+        </Button>
 
-          {/* （可選）之後若要加更多 IdP / Email Magic Link，在這裡擴充 */}
-        </div>
-
-        {/* 裝飾 / 條款（可選） */}
-        <p className="mt-6 text-center text-xs text-muted-foreground">
-          By signing in, you agree to our Terms and Privacy Policy.
+        <p className="mt-6 text-[11px] leading-5 text-muted-foreground">
+          登入即表示你同意本服務的{" "}
+          <span className="whitespace-nowrap">
+            <Link
+              href="/terms"
+              className="underline underline-offset-2 hover:text-foreground"
+            >
+              Terms of Use
+            </Link>
+            {" "}
+            與{" "}
+            <Link
+              href="/privacy"
+              className="underline underline-offset-2 hover:text-foreground"
+            >
+              Privacy Policy
+            </Link>
+          </span>
         </p>
       </div>
     </div>

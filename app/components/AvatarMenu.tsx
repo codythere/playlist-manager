@@ -29,13 +29,11 @@ export function AvatarMenu({
   const onLogout = async () => {
     try {
       setLoading(true);
-      // 直接整頁導向到 GET /api/auth/logout，由伺服器統一處理 redirect
       const next = redirectTo || "/login";
       window.location.href = `/api/auth/logout?next=${encodeURIComponent(
-        next
+        next,
       )}`;
     } finally {
-      // 通常不會看到這一行（因為整頁跳轉），保留以防 SPA 情境下的中斷
       setLoading(false);
     }
   };
@@ -52,7 +50,7 @@ export function AvatarMenu({
           size={28}
         />
         <span className="hidden text-sm font-medium md:inline">
-          {user?.name ?? user?.email ?? "User"}
+          {user?.name ?? user?.email ?? "使用者"}
         </span>
       </DropdownMenuTrigger>
 
@@ -63,11 +61,11 @@ export function AvatarMenu({
         <DropdownMenuSeparator />
 
         <DropdownMenuItem disabled onClick={() => {}}>
-          <User className="mr-2 h-4 w-4" /> Profile
+          <User className="mr-2 h-4 w-4" /> 個人資料
         </DropdownMenuItem>
 
         <DropdownMenuItem disabled onClick={() => {}}>
-          <Settings className="mr-2 h-4 w-4" /> Settings
+          <Settings className="mr-2 h-4 w-4" /> 設定
         </DropdownMenuItem>
 
         <DropdownMenuSeparator />
@@ -78,7 +76,7 @@ export function AvatarMenu({
           aria-disabled={loading}
         >
           <LogOut className="mr-2 h-4 w-4" />
-          {loading ? "Logging out…" : "Logout"}
+          {loading ? "登出中…" : "登出"}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

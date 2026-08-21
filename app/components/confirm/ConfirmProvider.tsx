@@ -3,7 +3,6 @@
 import * as React from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@/app/components/ui/button";
-import { cn } from "@/lib/utils";
 
 export type ConfirmOptions = {
   title?: React.ReactNode;
@@ -79,11 +78,11 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
                 )}
                 <Button
                   type="button"
+                  variant={
+                    opts.variant === "destructive" ? "destructive" : "default"
+                  }
                   onClick={() => close(true)}
-                  className={cn(
-                    opts.variant === "destructive" &&
-                      "bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  )}
+                  className="shadow-none hover:shadow-none"
                 >
                   {opts.confirmText ?? (opts.infoOnly ? "知道了" : "確定")}
                 </Button>

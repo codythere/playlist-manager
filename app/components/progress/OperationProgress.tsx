@@ -189,9 +189,9 @@ export function OperationProgressProvider({
   const hint = finished
     ? phase === "success"
       ? stats.failed > 0
-        ? `${stats.failed} 部影片失敗，可至事件追蹤查看`
+        ? `${stats.failed} 部影片失敗，可至操作紀錄查看`
         : "全部完成"
-      : "操作失敗，可至事件追蹤查看詳細錯誤"
+      : "操作失敗，可至操作紀錄查看詳細錯誤"
     : indeterminate
       ? "正在與 YouTube 建立連線…"
       : stats.movingIn

@@ -43,7 +43,7 @@ export function DropdownSelect({
           )}
           style={{ width: triggerWidth }}
         >
-          <span className="truncate">{selected?.label ?? "Select"}</span>
+          <span className="truncate">{selected?.label ?? "選擇"}</span>
           <ChevronDown className="h-4 w-4 opacity-70" />
         </button>
       </DropdownMenu.Trigger>

@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import { useTheme } from "next-themes";
-import { Check, Monitor, Moon, Sun } from "lucide-react";
+import { Check, Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -13,9 +13,8 @@ import {
 } from "@/app/components/ui/dropdown-menu";
 
 const THEMES = [
-  { value: "light", label: "Light", icon: Sun },
-  { value: "dark", label: "Dark", icon: Moon },
-  { value: "system", label: "System", icon: Monitor },
+  { value: "light", label: "淺色", icon: Sun },
+  { value: "dark", label: "深色", icon: Moon },
 ] as const;
 
 const triggerClass =
@@ -25,18 +24,23 @@ export function ThemeToggle() {
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [mounted, setMounted] = React.useState(false);
 
-  // 主題只有在 client 端才確定，掛載前先渲染一個等寬占位避免 hydration 不一致
   React.useEffect(() => setMounted(true), []);
+
+  // 若先前存過 system，改為深色（預設主題）
+  React.useEffect(() => {
+    if (theme === "system") setTheme("dark");
+  }, [theme, setTheme]);
 
   if (!mounted) {
     return <div className={triggerClass} aria-hidden />;
   }
 
   const isDark = resolvedTheme === "dark";
+  const active = theme === "light" || theme === "dark" ? theme : "dark";
 
   return (
     <DropdownMenu modal={false}>
-      <DropdownMenuTrigger className={triggerClass} aria-label="Toggle theme">
+      <DropdownMenuTrigger className={triggerClass} aria-label="切換主題">
         {isDark ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
       </DropdownMenuTrigger>
 
@@ -52,7 +56,7 @@ export function ThemeToggle() {
             <Check
               className={cn(
                 "h-4 w-4 text-violet-600 dark:text-violet-300",
-                theme === value ? "opacity-100" : "opacity-0",
+                active === value ? "opacity-100" : "opacity-0",
               )}
             />
           </DropdownMenuItem>
