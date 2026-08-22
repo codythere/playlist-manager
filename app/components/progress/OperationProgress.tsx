@@ -203,16 +203,14 @@ export function OperationProgressProvider({
       {children}
 
       {/* 頂端細進度條：不擋點擊，只負責讓進度隨時可見 */}
-      <div className="pointer-events-none fixed inset-x-0 top-0 z-[70] h-1 overflow-hidden bg-violet-500/10">
+      <div className="pointer-events-none fixed inset-x-0 top-0 z-[70] h-1 overflow-hidden bg-primary/10">
         {indeterminate ? (
-          <div className="h-full w-1/3 animate-progress-slide rounded-full bg-gradient-to-r from-violet-500 via-indigo-500 to-blue-500" />
+          <div className="h-full w-1/3 animate-progress-slide rounded-full bg-primary" />
         ) : (
           <div
             className={cn(
               "h-full rounded-r-full transition-[width] duration-500 ease-out",
-              phase === "error"
-                ? "bg-gradient-to-r from-rose-500 to-red-500"
-                : "bg-gradient-to-r from-violet-500 via-indigo-500 to-blue-500",
+              phase === "error" ? "bg-destructive" : "bg-primary",
             )}
             style={{ width: `${percent}%` }}
           />
@@ -225,14 +223,14 @@ export function OperationProgressProvider({
         role="status"
         aria-live="polite"
       >
-        <div className="rounded-2xl border border-border/70 bg-card/95 p-4 shadow-[0_24px_48px_-20px_rgba(15,23,42,0.45)] backdrop-blur-xl dark:shadow-[0_24px_48px_-20px_rgba(0,0,0,0.8)]">
+        <div className="rounded-2xl border border-border bg-card/95 p-4 shadow-[0_24px_48px_-20px_rgba(15,15,20,0.45)] backdrop-blur-xl">
           <div className="flex items-center gap-3">
             {phase === "success" ? (
               <CheckCircle2 className="h-5 w-5 shrink-0 text-emerald-500" />
             ) : phase === "error" ? (
-              <XCircle className="h-5 w-5 shrink-0 text-rose-500" />
+              <XCircle className="h-5 w-5 shrink-0 text-destructive" />
             ) : (
-              <Loader2 className="h-5 w-5 shrink-0 animate-spin text-violet-500" />
+              <Loader2 className="h-5 w-5 shrink-0 animate-spin text-primary" />
             )}
 
             <div className="min-w-0 flex-1">
@@ -266,14 +264,12 @@ export function OperationProgressProvider({
             aria-label={job.label}
           >
             {indeterminate ? (
-              <div className="h-full w-1/3 animate-progress-slide rounded-full bg-gradient-to-r from-violet-500 via-indigo-500 to-blue-500" />
+              <div className="h-full w-1/3 animate-progress-slide rounded-full bg-primary" />
             ) : (
               <div
                 className={cn(
                   "h-full rounded-full transition-[width] duration-500 ease-out",
-                  phase === "error"
-                    ? "bg-gradient-to-r from-rose-500 to-red-500"
-                    : "bg-gradient-to-r from-violet-500 via-indigo-500 to-blue-500",
+                  phase === "error" ? "bg-destructive" : "bg-primary",
                 )}
                 style={{ width: `${percent}%` }}
               />
@@ -281,7 +277,7 @@ export function OperationProgressProvider({
           </div>
 
           {stats.failed > 0 && !finished ? (
-            <div className="mt-2 text-[11px] font-medium text-rose-500">
+            <div className="mt-2 text-[11px] font-medium text-destructive">
               已有 {stats.failed} 部失敗
             </div>
           ) : null}

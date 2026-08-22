@@ -7,8 +7,8 @@ export const metadata: Metadata = {
 
 export default function PrivacyPage() {
   return (
-    <main className="mx-auto max-w-3xl px-4 py-10">
-      <article className="text-sm leading-relaxed space-y-6">
+    <div className="mx-auto max-w-3xl">
+      <article className="space-y-6 rounded-2xl border border-border bg-card p-6 text-sm leading-relaxed sm:p-8">
         <h1 className="text-2xl font-bold mb-8">
           隱私權政策（Privacy Policy）
         </h1>
@@ -170,7 +170,7 @@ export default function PrivacyPage() {
             播放清單操作紀錄（Action Logs）用於提供操作歷史、Undo
             回滾與錯誤診斷功能，於使用者刪除帳號或提出刪除請求時，將一併移除。
           </p>
-          <p className="text-neutral-600">
+          <p className="text-muted-foreground">
             Tokens (Access Token / Refresh Token) are permanently deleted from
             our database when the user logs out within the Service. If a user
             revokes access via their Google Account page, the token becomes
@@ -194,7 +194,7 @@ export default function PrivacyPage() {
               完成所有相關資料（包含 Token 與操作紀錄）的刪除，並回覆確認
             </li>
           </ul>
-          <p className="text-neutral-600">
+          <p className="text-muted-foreground">
             Users can ensure their data is deleted by either logging out within
             the Service (tokens are deleted immediately), or by emailing{" "}
             <strong>codylai0217@gmail.com</strong> to request deletion. We will
@@ -254,10 +254,10 @@ export default function PrivacyPage() {
 
         <hr />
 
-        <p className="text-neutral-500 text-xs text-right">
+        <p className="text-right text-xs text-muted-foreground">
           Last updated: 2025-11-17
         </p>
       </article>
-    </main>
+    </div>
   );
 }

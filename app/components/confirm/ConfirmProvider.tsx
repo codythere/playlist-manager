@@ -54,10 +54,10 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
         createPortal(
           <div className="fixed inset-0 z-[1000] flex items-center justify-center">
             <div
-              className="absolute inset-0 bg-black/40"
+              className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
               onClick={() => close(false)}
             />
-            <div className="relative w-[92vw] max-w-md rounded-xl border bg-card p-5 shadow-xl">
+            <div className="relative w-[92vw] max-w-md rounded-2xl border bg-card p-6 shadow-2xl">
               <div className="text-base font-semibold">
                 {opts.title ?? "請確認"}
               </div>

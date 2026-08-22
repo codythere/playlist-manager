@@ -37,8 +37,8 @@ export function DropdownSelect({
           type="button"
           aria-label={ariaLabel}
           className={cn(
-            "inline-flex h-8 items-center justify-between rounded-md border bg-background px-3 text-sm",
-            "focus:outline-none focus-visible:ring-1 focus-visible:ring-primary/40",
+            "inline-flex h-9 items-center justify-between rounded-xl border border-input bg-card px-3 text-sm",
+            "focus:outline-none focus-visible:ring-2 focus-visible:ring-ring",
             className
           )}
           style={{ width: triggerWidth }}
@@ -54,7 +54,7 @@ export function DropdownSelect({
           // 並不會鎖 body，也不會造成捲軸顯示/隱藏抖動
           sideOffset={6}
           className={cn(
-            "z-50 min-w-[8rem] rounded-md border bg-popover text-popover-foreground shadow-md",
+            "z-50 min-w-[8rem] rounded-xl border bg-popover p-1 text-popover-foreground shadow-md",
             "data-[state=open]:animate-in data-[state=closed]:animate-out",
             "data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
             "data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95"

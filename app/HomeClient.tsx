@@ -290,8 +290,8 @@ const ItemRow = React.memo(
     return (
       <label
         className={cn(
-          "flex cursor-pointer gap-3 rounded-md border bg-background p-2 transition",
-          checked && "border-primary ring-2 ring-primary/30",
+          "flex cursor-pointer gap-3 rounded-xl border border-border bg-background p-2 transition-colors hover:border-primary/30",
+          checked && "border-primary bg-primary/5",
         )}
       >
         <Checkbox
@@ -299,7 +299,7 @@ const ItemRow = React.memo(
           onCheckedChange={(c) => onToggle(item, Boolean(c))}
           className="mt-1"
         />
-        <div className="relative h-14 w-24 overflow-hidden rounded bg-muted flex-shrink-0">
+        <div className="relative h-14 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-muted">
           {item.thumbnailUrl ? (
             <Image
               src={item.thumbnailUrl}
@@ -355,7 +355,7 @@ function PlaylistColumn(props: {
     items.every((x) => selectedItemIds.has(x.playlistItemId));
 
   return (
-    <div className="min-w-[340px] w-[340px] shrink-0 rounded-lg border bg-card shadow-sm">
+    <div className="min-w-[340px] w-[340px] shrink-0 overflow-hidden rounded-2xl border border-border bg-card">
       {/* 欄頭 */}
       <div className="flex items-center justify-between border-b px-4 py-3">
         <div className="text-sm font-semibold">{playlist.title}</div>
@@ -1589,50 +1589,32 @@ export default function HomeClient() {
   }
   if (!auth.authenticated) {
     return (
-      <div className="mx-auto max-w-2xl space-y-4 rounded-lg border bg-card p-6 shadow-sm">
+      <div className="mx-auto max-w-md space-y-4 rounded-2xl border bg-card p-6 text-center">
         <h1 className="text-xl font-semibold">登入以管理你的播放清單</h1>
         <p className="text-sm text-muted-foreground">
-          連結 Google 帳號後，即可透過 YouTube Data API
-          讀取播放清單並執行批次操作。
+          連結 Google 帳號後，即可讀取播放清單並執行批次操作。
         </p>
-        <div className="flex gap-2">
-          <Button onClick={handleLogin}>使用 Google 登入</Button>
-        </div>
+        <Button onClick={handleLogin}>使用 Google 登入</Button>
       </div>
     );
   }
 
   return (
-    <div className="min-h-dvh">
+    <div>
       {view === "select-playlists" ? (
-        /* ---------- UI 稿件 1：多選播放清單 ---------- */
-        <main className="mx-auto max-w-6xl p-6 space-y-8">
-          <section className="space-y-3">
-            <div className="text-lg font-semibold">已選取播放清單：</div>
-            <div className="flex flex-wrap gap-2 h-8">
-              {[...checkedPlaylistIds].map((pid) => {
-                const p = allPlaylists.find((x) => x.id === pid);
-                if (!p) return null;
-                return (
-                  <span
-                    key={pid}
-                    className="inline-flex items-center rounded-full border px-3 py-1 text-sm"
-                  >
-                    {p.title}
-                  </span>
-                );
-              })}
+        <div className="page-wrap">
+          <section className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div className="space-y-1">
+              <h1 className="text-2xl font-semibold tracking-tight">播放清單</h1>
+              <p className="text-sm text-muted-foreground">
+                選擇要批次管理的清單，再按確認進入。
+              </p>
             </div>
-            <div className="flex gap-2 h-10">
-              <Button
-                variant="secondary"
-                onClick={onCancelSelect}
-                className="rounded-lg border border-slate-200/60 bg-card/70 text-slate-700 font-medium hover:bg-slate-50 hover:shadow-sm transition-all duration-200 dark:border-border/60 dark:text-slate-200 dark:hover:bg-accent"
-              >
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={onCancelSelect}>
                 取消
               </Button>
               <Button
-                className="rounded-lg bg-violet-600 text-white font-medium hover:bg-violet-700 shadow-none disabled:opacity-50 disabled:hover:bg-violet-600 transition-all duration-200"
                 onClick={onConfirmSelect}
                 disabled={checkedPlaylistIds.size === 0}
               >
@@ -1641,68 +1623,81 @@ export default function HomeClient() {
             </div>
           </section>
 
-          <section className="space-y-3">
-            <div className="text-xl font-semibold">播放清單</div>
-            <PlaylistList
-              playlists={allPlaylists}
-              selectable
-              selectedIds={checkedPlaylistIds}
-              onToggleSelect={toggleSelectPlaylist}
-              isLoading={playlistsQ.isLoading}
-            />
-          </section>
-        </main>
+          {checkedPlaylistIds.size > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {[...checkedPlaylistIds].map((pid) => {
+                const p = allPlaylists.find((x) => x.id === pid);
+                if (!p) return null;
+                return (
+                  <span
+                    key={pid}
+                    className="inline-flex items-center rounded-full border border-primary/25 bg-primary/10 px-3 py-1 text-sm text-primary"
+                  >
+                    {p.title}
+                  </span>
+                );
+              })}
+            </div>
+          ) : null}
+
+          <PlaylistList
+            playlists={allPlaylists}
+            selectable
+            selectedIds={checkedPlaylistIds}
+            onToggleSelect={toggleSelectPlaylist}
+            isLoading={playlistsQ.isLoading}
+          />
+        </div>
       ) : (
-        /* ---------- UI 稿件 2：管理多欄影片 ---------- */
-        <main className="mx-auto max-w-[1200px] p-6 space-y-8">
-          <section className="flex justify-end">
+        <div className="mx-auto w-full max-w-[1200px] space-y-6">
+          <section className="flex flex-wrap items-center justify-between gap-3">
+            <div className="space-y-1">
+              <h1 className="text-2xl font-semibold tracking-tight">批次操作</h1>
+              <p className="text-sm text-muted-foreground">
+                勾選影片後，新增、移除或移轉到其他清單。
+              </p>
+            </div>
             <Button variant="ghost" onClick={backToSelect}>
               ← 返回選取播放清單
             </Button>
           </section>
 
-          <section className="space-y-3">
-            <div className="text-lg font-semibold">已選取播放清單：</div>
-            <div className="flex flex-wrap gap-2">
-              {confirmedPlaylists.map((p) => (
-                <span
-                  key={p.id}
-                  className="inline-flex items-center rounded-full border px-3 py-1 text-sm"
-                >
-                  {p.title}
-                </span>
-              ))}
-            </div>
+          <section className="flex flex-wrap gap-2">
+            {confirmedPlaylists.map((p) => (
+              <span
+                key={p.id}
+                className="inline-flex items-center rounded-full border border-border bg-card px-3 py-1 text-sm"
+              >
+                {p.title}
+              </span>
+            ))}
           </section>
 
-          <section>
-            <ActionsToolbar
-              selectedCount={totalSelectedCount}
-              playlists={allPlaylists}
-              selectedPlaylistId={targetPlaylistId}
-              onTargetChange={setTargetPlaylistId}
-              onAdd={handleAddSelected}
-              onRemove={handleRemoveSelected}
-              onMove={(tid?: string | null) => handleMoveSelected(tid)}
-              onUndo={onUndo}
-              estimatedQuota={estimatedQuota}
-              addLoading={addLoading}
-              removeLoading={removeLoading}
-              moveLoading={moveLoading}
-              undoLoading={undoLoading}
-              canUndo={Boolean(lastOp)}
-              todayRemaining={todayRemaining}
-              todayBudget={todayBudget}
-              quotaResetAtISO={quotaResetAtISO}
-              videoOpsTotal={operatedTotal}
-            />
-          </section>
+          <ActionsToolbar
+            selectedCount={totalSelectedCount}
+            playlists={allPlaylists}
+            selectedPlaylistId={targetPlaylistId}
+            onTargetChange={setTargetPlaylistId}
+            onAdd={handleAddSelected}
+            onRemove={handleRemoveSelected}
+            onMove={(tid?: string | null) => handleMoveSelected(tid)}
+            onUndo={onUndo}
+            estimatedQuota={estimatedQuota}
+            addLoading={addLoading}
+            removeLoading={removeLoading}
+            moveLoading={moveLoading}
+            undoLoading={undoLoading}
+            canUndo={Boolean(lastOp)}
+            todayRemaining={todayRemaining}
+            todayBudget={todayBudget}
+            quotaResetAtISO={quotaResetAtISO}
+            videoOpsTotal={operatedTotal}
+          />
 
-          {/* 下方內容 + 雙滑軌 */}
           <section className="space-y-3">
-            <div className="flex justify-between">
-              <div className="text-xl font-semibold">播放清單</div>
-              <Button variant="ghost" onClick={clearAllSelections}>
+            <div className="flex items-center justify-between">
+              <div className="text-lg font-semibold">播放清單</div>
+              <Button variant="ghost" size="sm" onClick={clearAllSelections}>
                 取消勾選
               </Button>
             </div>
@@ -1723,7 +1718,7 @@ export default function HomeClient() {
                       return (
                         <div
                           key={playlist.id}
-                          className="min-w-[340px] w-[340px] shrink-0 rounded-lg border bg-card shadow-sm p-4 text-sm text-muted-foreground"
+                          className="min-w-[340px] w-[340px] shrink-0 rounded-2xl border bg-card p-4 text-sm text-muted-foreground"
                         >
                           載入中…
                         </div>
@@ -1733,7 +1728,7 @@ export default function HomeClient() {
                       return (
                         <div
                           key={playlist.id}
-                          className="min-w-[340px] w-[340px] shrink-0 rounded-lg border bg-card shadow-sm p-4 text-sm text-destructive"
+                          className="min-w-[340px] w-[340px] shrink-0 rounded-2xl border bg-card p-4 text-sm text-destructive"
                         >
                           讀取失敗
                         </div>
@@ -1779,9 +1774,8 @@ export default function HomeClient() {
               </div>
             </div>
           </section>
-        </main>
+        </div>
       )}
-      {/* ✅ 共用一次 ProgressToast */}
       <ProgressToast
         status={actionToast.status}
         actionLabel={actionToast.label}

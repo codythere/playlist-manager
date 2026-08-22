@@ -32,14 +32,14 @@ export default function LoginClient({
     <div className="grid min-h-screen place-items-center px-6 py-10">
       <div className="relative w-full max-w-sm">
         <div className="absolute bottom-full left-0 right-0 mb-4 flex justify-center">
-          <span className="rounded-full border border-violet-500/40 bg-violet-500/15 px-3.5 py-1.5 text-sm font-semibold text-violet-700 dark:text-violet-200">
+          <span className="chip-beta px-3.5 py-1.5 text-sm">
             🎉 Beta 免費試用中
           </span>
         </div>
 
-        <div className="rounded-2xl border border-border/70 bg-card/90 p-8 text-center shadow-sm backdrop-blur-sm">
-          <div className="mb-8 flex items-center justify-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500 via-indigo-500 to-blue-500 shadow-md shadow-violet-500/25">
+        <div className="rounded-2xl border border-border bg-card p-8 text-center shadow-[0_24px_60px_-36px_rgba(0,0,0,0.55)]">
+          <div className="mb-7 flex items-center justify-center gap-2.5">
+            <div className="brand-mark h-9 w-9">
               <Image src="/logo.png" alt="" width={18} height={18} />
             </div>
             <div className="text-base font-semibold tracking-tight">
@@ -55,7 +55,7 @@ export default function LoginClient({
           </p>
 
           {error ? (
-            <div className="mb-4 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-left text-sm text-destructive">
+            <div className="mb-4 rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-left text-sm text-destructive">
               {error === "oauth_denied"
                 ? "你已取消授權，請再試一次。"
                 : error}
@@ -69,9 +69,7 @@ export default function LoginClient({
           ) : null}
 
           <Button
-            variant="ghost"
-            className="w-full justify-center bg-violet-600 text-white hover:bg-violet-500 hover:text-white"
-            style={{ boxShadow: "none" }}
+            className="w-full"
             onClick={handleGoogle}
             aria-label="使用 Google 登入"
             disabled={loading}

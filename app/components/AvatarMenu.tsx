@@ -41,7 +41,7 @@ export function AvatarMenu({
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger
-        className="inline-flex items-center gap-2 rounded-full px-2 py-1 hover:bg-accent 
+        className="inline-flex items-center gap-2 rounded-full border border-transparent px-2 py-1 hover:bg-accent 
                    focus:outline-none focus-visible:outline-none focus-visible:ring-0"
       >
         <Avatar

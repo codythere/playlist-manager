@@ -284,8 +284,8 @@ function Badge({
       "bg-amber-100/70 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300 border border-amber-200/50 dark:border-amber-500/25",
     red: "bg-rose-100/70 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300 border border-rose-200/50 dark:border-rose-500/25",
     slate:
-      "bg-slate-100/70 text-slate-700 dark:bg-slate-900/30 dark:text-slate-300 border border-slate-200/50 dark:border-slate-500/25",
-    blue: "bg-blue-100/70 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300 border border-blue-200/50 dark:border-blue-500/25",
+      "bg-muted text-muted-foreground border border-border",
+    blue: "bg-primary/10 text-primary border border-primary/20",
   };
   return (
     <span
@@ -386,7 +386,7 @@ function SectionTitle({
     <div className="flex items-center justify-between gap-4">
       <div className="flex items-center gap-2.5">
         {/* Simplified icon container */}
-        <div className="flex items-center justify-center w-9 h-9 rounded-sm bg-gradient-to-br from-violet-500 to-purple-600 text-white shadow-md">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary text-primary-foreground">
           <Icon className="h-5 w-5" />
         </div>
 
@@ -402,7 +402,7 @@ function SectionTitle({
 
 function CardShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-slate-200/50 bg-card/60 backdrop-blur-sm shadow-[0_4px_12px_-4px_rgba(15,23,42,0.1)] transition-all duration-200 hover:shadow-[0_8px_20px_-6px_rgba(15,23,42,0.15)] hover:border-slate-200/70 dark:border-border/60 dark:hover:border-border">
+    <div className="rounded-2xl border border-border bg-card transition-colors hover:border-primary/30">
       {children}
     </div>
   );
@@ -410,12 +410,12 @@ function CardShell({ children }: { children: React.ReactNode }) {
 
 function SkeletonRow() {
   return (
-    <div className="animate-pulse border-b px-4 py-3">
+    <div className="animate-pulse rounded-2xl border border-border bg-card px-5 py-4">
       <div className="flex items-center justify-between">
         <div className="h-3 w-40 rounded bg-muted" />
         <div className="h-3 w-24 rounded bg-muted" />
       </div>
-      <div className="mt-2 h-3 w-64 rounded bg-muted" />
+      <div className="mt-3 h-3 w-64 rounded bg-muted" />
     </div>
   );
 }
@@ -494,17 +494,12 @@ export default function ActionLogClient() {
 
   if (actionsQuery.isLoading) {
     return (
-      <div className="relative min-h-screen bg-gradient-to-br from-white via-slate-50/50 to-slate-100/30 dark:bg-none">
-        {/* Decorative background */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-violet-100/40 to-purple-100/20 dark:from-violet-500/10 dark:to-purple-500/5 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 mx-auto max-w-6xl p-6">
-          <SectionTitle icon={List} title="操作紀錄" />
-          <div className="mt-8 space-y-3">
-            <SkeletonRow />
-            <SkeletonRow />
-            <SkeletonRow />
-          </div>
+      <div className="page-wrap">
+        <SectionTitle icon={List} title="操作紀錄" />
+        <div className="space-y-3">
+          <SkeletonRow />
+          <SkeletonRow />
+          <SkeletonRow />
         </div>
       </div>
     );
@@ -514,8 +509,8 @@ export default function ActionLogClient() {
     const error = actionsQuery.error as ApiError;
     if (error.code === "unauthorized") {
       return (
-        <div className="relative min-h-screen bg-gradient-to-br from-white via-slate-50/50 to-slate-100/30 dark:bg-none flex items-center justify-center">
-          <div className="relative z-10 text-center">
+        <div className="page-wrap flex min-h-[40vh] items-center justify-center">
+          <div className="text-center">
             <div className="mb-4 text-5xl">🔐</div>
             <p className="text-lg text-muted-foreground font-medium">
               請登入後查看近期操作紀錄。
@@ -525,8 +520,8 @@ export default function ActionLogClient() {
       );
     }
     return (
-      <div className="relative min-h-screen bg-gradient-to-br from-white via-slate-50/50 to-slate-100/30 dark:bg-none flex items-center justify-center">
-        <div className="relative z-10 text-center">
+      <div className="page-wrap flex min-h-[40vh] items-center justify-center">
+        <div className="text-center">
           <div className="mb-4 text-5xl">⚠️</div>
           <p className="text-lg text-destructive font-medium">
             {error.message || "無法載入操作紀錄"}
@@ -538,37 +533,27 @@ export default function ActionLogClient() {
 
   if (!actions.length) {
     return (
-      <div className="relative min-h-screen bg-gradient-to-br from-white via-slate-50/50 to-slate-100/30 dark:bg-none">
-        {/* Decorative background */}
-        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-violet-100/40 to-purple-100/20 dark:from-violet-500/10 dark:to-purple-500/5 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 mx-auto max-w-6xl p-6">
-          <SectionTitle icon={List} title="操作紀錄" />
-          <div className="mt-8 flex items-center justify-center">
-            <CardShell>
-              <div className="flex flex-col items-center gap-3 px-8 py-12 text-center">
-                <div className="text-5xl">📋</div>
-                <p className="text-base font-medium text-foreground">
-                  尚無操作紀錄
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  執行批次新增／移轉／移除後，紀錄會顯示在這裡。
-                </p>
-              </div>
-            </CardShell>
-          </div>
+      <div className="page-wrap">
+        <SectionTitle icon={List} title="操作紀錄" />
+        <div className="flex items-center justify-center">
+          <CardShell>
+            <div className="flex flex-col items-center gap-3 px-8 py-12 text-center">
+              <div className="text-5xl">📋</div>
+              <p className="text-base font-medium text-foreground">
+                尚無操作紀錄
+              </p>
+              <p className="text-sm text-muted-foreground">
+                執行批次新增／移轉／移除後，紀錄會顯示在這裡。
+              </p>
+            </div>
+          </CardShell>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-white via-slate-50/50 to-slate-100/30 dark:bg-none">
-      {/* Decorative background elements */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-violet-100/40 to-purple-100/20 dark:from-violet-500/10 dark:to-purple-500/5 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-1/2 w-80 h-80 bg-gradient-to-tr from-blue-100/30 to-violet-100/20 dark:from-blue-500/10 dark:to-violet-500/5 rounded-full blur-3xl pointer-events-none" />
-
-      <div className="relative z-10 mx-auto max-w-6xl px-6 py-8">
+    <div className="page-wrap">
         {/* Header */}
         <div className="mb-8">
           <SectionTitle
@@ -584,7 +569,7 @@ export default function ActionLogClient() {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-slate-600 dark:text-slate-300">
+                  <span className="text-xs font-semibold text-muted-foreground">
                     每頁筆數
                   </span>
                   <DropdownSelect
@@ -676,7 +661,6 @@ export default function ActionLogClient() {
             </Button>
           </div>
         ) : null}
-      </div>
     </div>
   );
 }
@@ -743,7 +727,7 @@ function ActionCard({
               <button
                 type="button"
                 onClick={toggle}
-                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold text-violet-600 hover:bg-violet-50 transition-colors dark:text-violet-300 dark:hover:bg-violet-500/10"
+                className="inline-flex items-center gap-1.5 rounded-lg px-3 py-1 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
                 aria-expanded={expanded}
               >
                 {icon}
@@ -756,7 +740,7 @@ function ActionCard({
             {/* Timeline info */}
             <div className="text-xs text-muted-foreground space-y-1">
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-slate-400 flex-shrink-0 dark:text-slate-500" />
+                <Calendar className="h-4 w-4 flex-shrink-0 text-muted-foreground" />
                 <span>
                   建立於{" "}
                   <span className="font-semibold">
@@ -776,14 +760,14 @@ function ActionCard({
               <div className="flex flex-wrap items-center gap-2 text-xs">
                 <span className="inline-flex items-center gap-1">
                   <span className="opacity-60">來源：</span>
-                  <span className="truncate font-medium text-slate-700 dark:text-slate-200">
+                  <span className="truncate font-medium text-foreground">
                     {sourceName}
                   </span>
                 </span>
                 <span className="opacity-40">→</span>
                 <span className="inline-flex items-center gap-1">
                   <span className="opacity-60">目標：</span>
-                  <span className="truncate font-medium text-slate-700 dark:text-slate-200">
+                  <span className="truncate font-medium text-foreground">
                     {targetName}
                   </span>
                 </span>
@@ -937,7 +921,7 @@ function ActionDetails({
       )}
     >
       <div className="min-h-0">
-        <div className="mt-4 space-y-4 rounded-lg border border-slate-200/30 bg-gradient-to-br from-slate-50/50 to-slate-100/30 backdrop-blur-sm p-4 dark:border-border/60 dark:bg-none dark:bg-muted/25">
+        <div className="mt-4 space-y-4 rounded-xl border border-border bg-muted/40 p-4">
           {/* Action buttons row */}
           <div className="flex flex-wrap items-center gap-2">
             <Button

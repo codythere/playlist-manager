@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { Github } from "lucide-react";
-// 讀版本號：
-import pkg from "../../package.json"; // 視你實際路徑調整
+import pkg from "../../package.json";
 
 export function Footer() {
   const version = pkg.version;
@@ -11,58 +10,40 @@ export function Footer() {
   return (
     <footer
       aria-label="頁尾法務與安全說明"
-      className="mt-10 border-t px-4 py-6 text-xs text-muted-foreground"
+      className="mt-auto border-t border-border/80 px-4 py-5 text-xs text-muted-foreground"
     >
-      <div className="mx-auto max-w-screen-xl space-y-4 leading-relaxed">
-        {/* 安全說明文字（建議保留，簡短說明行為） */}
+      <div className="mx-auto max-w-6xl space-y-3 leading-relaxed">
         <div className="space-y-1">
           <p>
-            - 本工具僅在使用者登入期間使用其帳號授權操作，不會將 YouTube Data
-            長期寫入資料庫或傳給第三方。
-          </p>
-          <p>- 不提供內容下載、匯出或對外同步。</p>
-          <p>
-            - 任何批次操作都需要使用者手動點擊並二次確認，不會在背景輪詢或執行。
+            本工具僅在使用者登入期間使用其帳號授權操作，不會將 YouTube Data
+            長期寫入資料庫或傳給第三方。不提供內容下載、匯出或對外同步。
           </p>
           <p>
-            - 當配額不足（<code>quotaExceeded</code>
-            ）時，會明確告知使用者並暫停對應功能。
+            任何批次操作都需要手動點擊並二次確認。配額不足（
+            <code>quotaExceeded</code>
+            ）時會暫停對應功能。
           </p>
         </div>
 
-        {/* 法務／隱私連結 */}
-        <div className="flex flex-wrap items-center gap-3 pt-3 border-t text-[11px]">
-          <span className="text-muted-foreground">
-            Playlist Manager · v{version}
-          </span>
-          <span>·</span>
-          <div className="flex flex-wrap items-center gap-3">
-            <Link
-              href="/privacy"
-              className="hover:text-foreground underline-offset-2 "
-            >
-              Privacy Policy
-            </Link>
-            <span>·</span>
-            <Link
-              href="/terms"
-              className="hover:text-foreground underline-offset-2 "
-            >
-              Terms of Use
-            </Link>
-          </div>
-
-          <div className="ml-auto">
-            <Link
-              href="https://github.com/codythere/yt-playlist-manager"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 hover:text-foreground transition-colors"
-            >
-              <Github className="h-3.5 w-3.5" />
-              GitHub
-            </Link>
-          </div>
+        <div className="flex flex-wrap items-center gap-3 pt-1 text-[11px]">
+          <span>Playlist Manager · v{version}</span>
+          <span className="opacity-40">·</span>
+          <Link href="/privacy" className="hover:text-foreground">
+            Privacy Policy
+          </Link>
+          <span className="opacity-40">·</span>
+          <Link href="/terms" className="hover:text-foreground">
+            Terms of Use
+          </Link>
+          <Link
+            href="https://github.com/codythere/yt-playlist-manager"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="ml-auto inline-flex items-center gap-1 hover:text-foreground"
+          >
+            <Github className="h-3.5 w-3.5" />
+            GitHub
+          </Link>
         </div>
       </div>
     </footer>

@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// ⬇️ shadcn/ui 組件（需要已安裝）
 import {
   Popover,
   PopoverTrigger,
@@ -35,42 +34,23 @@ import {
 export interface ActionsToolbarProps {
   selectedCount: number;
   playlists: PlaylistSummary[];
-
-  /** 受控目標清單（可為 null） */
   selectedPlaylistId?: string | null;
-  /** 受控模式：目標變更回呼（可選） */
   onTargetChange?: (id: string | null) => void;
-
-  /** ✅ 讓 onAdd 也吃 targetId（和 onMove 一致） */
   onAdd: (targetId?: string | null) => void;
   onRemove: () => void;
-  /** 可接受 targetId；若父層不傳，仍可維持舊介面呼叫 `onMove()` */
   onMove: (targetId?: string | null) => void;
   onUndo: () => void;
-
-  /** 相容舊版：全域鎖（若提供，會併入三顆按鈕的 disabled） */
   isLoading?: boolean;
-
-  /** 估算配額（顯示用） */
   estimatedQuota?: number;
-
-  /** ✅ 進階版：各自的 loading（優先於 isLoading） */
   addLoading?: boolean;
   removeLoading?: boolean;
   moveLoading?: boolean;
   undoLoading?: boolean;
-
-  /** ✅ 是否可復原（控制 Undo 按鈕啟用） */
   canUndo?: boolean;
-
-  /** ✅ 今日配額訊息（可選） */
   todayRemaining?: number;
   todayBudget?: number;
   quotaResetAtISO?: string;
-
-  /** ✅ 全站影片操作總數（可選） */
   videoOpsTotal?: number;
-  /** ✅ 全站影片操作數最後更新時間（ISO 字串，可選） */
   videoOpsUpdatedAtISO?: string;
 }
 
@@ -95,22 +75,14 @@ export function ActionsToolbar(props: ActionsToolbarProps) {
   const removeBusy = Boolean(props.removeLoading) || busyAll;
   const moveBusy = Boolean(props.moveLoading) || busyAll;
   const undoBusy = Boolean(props.undoLoading) || busyAll;
-
   const nothingSelected = selectedCount === 0;
 
-  // 非受控本地狀態（若父層沒提供 selectedPlaylistId 時使用）
   const [localTargetId, setLocalTargetId] = React.useState<string | null>(null);
-
-  // 受控 / 非受控合併值
   const currentTargetId =
     typeof selectedPlaylistId !== "undefined"
       ? selectedPlaylistId
       : localTargetId;
-
-  // Combobox popover
   const [open, setOpen] = React.useState(false);
-
-  // 下拉在新增/移轉進行中鎖住，避免途中換目標
   const targetDisabled = addBusy || moveBusy;
 
   const handleChange = (id: string | null) => {
@@ -128,7 +100,6 @@ export function ActionsToolbar(props: ActionsToolbarProps) {
   const remain = props.todayRemaining ?? 0;
   const budget = props.todayBudget ?? 0;
   const percent = budget > 0 ? Math.round((remain / budget) * 100) : 0;
-
   const showVideoOps = typeof props.videoOpsTotal === "number";
   const videoOpsTitle = props.videoOpsUpdatedAtISO
     ? `全站影片操作總數：${formatUnits(
@@ -137,63 +108,54 @@ export function ActionsToolbar(props: ActionsToolbarProps) {
     : `全站影片操作總數：${formatUnits(props.videoOpsTotal ?? 0)}`;
 
   return (
-    <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-3">
-      <div className="flex items-center gap-2 text-sm">
-        <ListVideo className="h-4 w-4 opacity-70" />
-        已勾選：<b>{selectedCount}</b> 部影片
-        {typeof props.estimatedQuota === "number" ? (
-          <span className="text-muted-foreground">
-            （估算配額 {formatUnits(props.estimatedQuota)}）
-          </span>
-        ) : null}
+    <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-2 text-sm">
+          <ListVideo className="h-4 w-4 text-muted-foreground" />
+          已勾選 <b className="tabular-nums">{selectedCount}</b> 部影片
+          {typeof props.estimatedQuota === "number" ? (
+            <span className="text-muted-foreground">
+              · 估算配額 {formatUnits(props.estimatedQuota)}
+            </span>
+          ) : null}
+        </div>
+
+        {(showQuota || showVideoOps) && (
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            {showQuota && (
+              <div
+                className="flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-2.5 py-1"
+                title={
+                  props.quotaResetAtISO
+                    ? `今日剩餘：${formatUnits(remain)} / ${formatUnits(
+                        budget,
+                      )}，重置時間：${props.quotaResetAtISO}`
+                    : `今日剩餘：${formatUnits(remain)} / ${formatUnits(budget)}`
+                }
+              >
+                <Gauge className="h-3.5 w-3.5 opacity-70" />
+                <span>
+                  今日剩餘 <b>{formatUnits(remain)}</b> / {formatUnits(budget)}（
+                  {percent}%）
+                </span>
+              </div>
+            )}
+            {showVideoOps && (
+              <div
+                className="flex items-center gap-1.5 rounded-full border border-border bg-muted/40 px-2.5 py-1"
+                title={videoOpsTitle}
+              >
+                <ListVideo className="h-3.5 w-3.5 opacity-70" />
+                <span>
+                  累計操作 <b>{formatUnits(props.videoOpsTotal ?? 0)}</b>
+                </span>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* ✅ 右側資訊區：今日剩餘（上）+ 全站已操作（下） */}
-      {(showQuota || showVideoOps) && (
-        <div className="ml-auto flex flex-col items-end gap-2">
-          {/* 今日配額顯示（上） */}
-          {showQuota && (
-            <div
-              className="flex items-center gap-2 rounded-md border px-2 py-1 text-xs"
-              title={
-                props.quotaResetAtISO
-                  ? `今日剩餘：${formatUnits(remain)} / ${formatUnits(
-                      budget,
-                    )}，重置時間：${props.quotaResetAtISO}`
-                  : `今日剩餘：${formatUnits(remain)} / ${formatUnits(budget)}`
-              }
-            >
-              <Gauge className="h-3.5 w-3.5 opacity-70" />
-              <span className="whitespace-nowrap">
-                今日剩餘：<b>{formatUnits(remain)}</b> / {formatUnits(budget)}（
-                {percent}%）
-              </span>
-            </div>
-          )}
-
-          {/* 全站影片操作總數（下） */}
-          {showVideoOps && (
-            <div
-              className="flex items-center gap-2 rounded-md border px-2 py-1 text-xs"
-              title={videoOpsTitle}
-            >
-              <ListVideo className="h-3.5 w-3.5 opacity-70" />
-              <span className="whitespace-nowrap">
-                累計影片操作次數：<b>{formatUnits(props.videoOpsTotal ?? 0)}</b>
-              </span>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ✅ 右側按鈕區：若右側資訊區沒顯示，才 ml-auto */}
-      <div
-        className={cn(
-          "flex items-center gap-2",
-          !(showQuota || showVideoOps) && "ml-auto",
-        )}
-      >
-        {/* 美化後的可搜尋 DDL（Combobox） */}
+      <div className="flex flex-wrap items-center gap-2">
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
             <Button
@@ -227,7 +189,6 @@ export function ActionsToolbar(props: ActionsToolbarProps) {
                       onSelect={() => {
                         const next = p.id === currentTargetId ? null : p.id;
                         handleChange(next);
-                        // 選擇後自動關閉彈窗
                         setOpen(false);
                       }}
                       className="cursor-pointer"
@@ -249,7 +210,6 @@ export function ActionsToolbar(props: ActionsToolbarProps) {
           </PopoverContent>
         </Popover>
 
-        {/* 新增到清單（需選目標且有勾選） */}
         <Button
           size="sm"
           variant="secondary"
@@ -270,7 +230,6 @@ export function ActionsToolbar(props: ActionsToolbarProps) {
           )}
         </Button>
 
-        {/* 從原清單移除（不需目標） */}
         <Button
           size="sm"
           variant="outline"
@@ -291,7 +250,6 @@ export function ActionsToolbar(props: ActionsToolbarProps) {
           )}
         </Button>
 
-        {/* 一併移轉（需選目標且有勾選） */}
         <Button
           size="sm"
           onClick={() => onMove(currentTargetId)}
@@ -311,7 +269,6 @@ export function ActionsToolbar(props: ActionsToolbarProps) {
           )}
         </Button>
 
-        {/* 復原：只有有可復原動作時才可按 */}
         <Button
           size="sm"
           variant="ghost"

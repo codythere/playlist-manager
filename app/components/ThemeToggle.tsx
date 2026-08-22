@@ -17,8 +17,7 @@ const THEMES = [
   { value: "dark", label: "深色", icon: Moon },
 ] as const;
 
-const triggerClass =
-  "inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border/80 bg-background/60 text-foreground shadow-sm transition hover:bg-accent focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ring-offset-background";
+const triggerClass = "icon-btn";
 
 export function ThemeToggle() {
   const { theme, setTheme, resolvedTheme } = useTheme();
@@ -55,7 +54,7 @@ export function ThemeToggle() {
             <span className="flex-1">{label}</span>
             <Check
               className={cn(
-                "h-4 w-4 text-violet-600 dark:text-violet-300",
+                "h-4 w-4 text-primary",
                 active === value ? "opacity-100" : "opacity-0",
               )}
             />
