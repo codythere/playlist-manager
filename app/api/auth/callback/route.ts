@@ -6,6 +6,7 @@ import {
   saveUserTokens,
   isGoogleConfigured,
 } from "@/lib/google";
+import { reportSphereVisit, visitorIdForLogin } from "@/lib/shell-sphere";
 
 export const dynamic = "force-dynamic";
 
@@ -102,7 +103,17 @@ export async function GET(req: NextRequest) {
     // 3) 存 tokens（你的 saveUserTokens 會保留舊 refresh_token）
     await saveUserTokens(userId, tokens);
 
-    // 4) 設 session cookie（含 userId 與 email，供 /api/auth/me 使用）
+    // 4) 回報 SHELL SPHERE oauth（失敗不擋登入；Key 只在伺服器）
+    try {
+      await reportSphereVisit(
+        visitorIdForLogin({ userId, googleSub: sub }),
+        "oauth",
+      );
+    } catch {
+      /* ignore */
+    }
+
+    // 5) 設 session cookie（含 userId 與 email，供 /api/auth/me 使用）
     const res = NextResponse.redirect(new URL(redirectTarget, req.url), {
       status: 302,
     });
