@@ -98,7 +98,7 @@ export function AppShell({
   if (pathname === "/login") {
     return (
       <div className="relative min-h-screen">
-        <div className="absolute right-4 top-4 z-10">
+        <div className="absolute right-4 top-4 z-20">
           <ThemeToggle />
         </div>
         {children}

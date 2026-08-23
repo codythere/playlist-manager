@@ -134,6 +134,10 @@ body {
     @apply inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border/80 bg-card text-foreground transition hover:bg-accent hover:text-accent-foreground;
   }
 
+  .icon-btn {
+    @apply inline-flex h-9 w-9 items-center justify-center rounded-xl border border-border/80 bg-card text-foreground transition hover:bg-accent hover:text-accent-foreground;
+  }
+
   .page-wrap {
     @apply mx-auto w-full max-w-6xl space-y-6;
   }
