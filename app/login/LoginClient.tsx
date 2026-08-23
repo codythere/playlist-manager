@@ -94,7 +94,8 @@ export default function LoginClient({
 
           <h1 className="max-w-md text-4xl font-semibold tracking-tight text-foreground xl:text-[2.6rem] xl:leading-tight">
             把播放清單整理成
-            <span className="text-primary"> 你真正會看的樣子</span>
+            <br />
+            <span className="text-primary">你真正會看的樣子</span>
           </h1>
           <p className="mt-4 max-w-md text-[15px] leading-7 text-muted-foreground">
             登入後即可批次管理你的 YouTube 播放清單。不會下載影片，也不會把資料交給第三方。
