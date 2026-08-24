@@ -195,7 +195,7 @@ export default function LoginClient({
                 ) : (
                   <GoogleMark />
                 )}
-                {loading ? "導向中…" : "使用 Google 登入"}
+                使用 Google 登入
               </Button>
 
               <p className="mt-3 text-center text-[11px] text-muted-foreground">

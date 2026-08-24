@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/app/components/ui/dropdown-menu";
 import { Avatar } from "@/app/components/ui/avatar";
-import { LogOut, Settings, User } from "lucide-react";
+import { LogOut, Settings, User, Loader2 } from "lucide-react";
 
 /**
  * 說明：
@@ -75,8 +75,12 @@ export function AvatarMenu({
           className="text-destructive"
           aria-disabled={loading}
         >
-          <LogOut className="mr-2 h-4 w-4" />
-          {loading ? "登出中…" : "登出"}
+          {loading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <LogOut className="mr-2 h-4 w-4" />
+          )}
+          登出
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

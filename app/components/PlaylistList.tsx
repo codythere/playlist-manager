@@ -26,8 +26,23 @@ export function PlaylistList({
 }: PlaylistListProps) {
   if (isLoading) {
     return (
-      <div className="rounded-2xl border border-dashed border-border bg-card/60 p-10 text-center text-sm text-muted-foreground">
-        載入播放清單中…
+      <div
+        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        role="status"
+        aria-label="載入播放清單中"
+      >
+        {Array.from({ length: 8 }).map((_, index) => (
+          <div
+            key={index}
+            className="overflow-hidden rounded-2xl border border-border bg-card"
+          >
+            <div className="h-36 animate-pulse bg-muted" />
+            <div className="space-y-3 px-4 py-3">
+              <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
+              <div className="h-5 w-16 animate-pulse rounded-full bg-muted" />
+            </div>
+          </div>
+        ))}
       </div>
     );
   }

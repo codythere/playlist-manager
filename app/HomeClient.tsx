@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { PlaylistList } from "@/app/components/PlaylistList";
 import { Button } from "@/app/components/ui/button";
 import { Checkbox } from "@/app/components/ui/checkbox";
+import { PageLoader } from "@/app/components/ui/spinner";
 import { ActionsToolbar } from "@/app/components/ActionsToolbar";
 import { ProgressToast } from "@/app/components/ProgressToast";
 import { useOperationProgress } from "@/app/components/progress/OperationProgress";
@@ -461,6 +462,12 @@ export default function HomeClient() {
 
   /* ---- 視圖狀態 ---- */
   const [view, setView] = React.useState<View>("select-playlists");
+
+  React.useEffect(() => {
+    const onGoHome = () => setView("select-playlists");
+    window.addEventListener("ytpm:go-home", onGoHome);
+    return () => window.removeEventListener("ytpm:go-home", onGoHome);
+  }, []);
 
   // ✅ 共用 ProgressToast 狀態
   const [actionToast, setActionToast] = React.useState<{
@@ -1575,11 +1582,10 @@ export default function HomeClient() {
   const [mounted, setMounted] = React.useState(false);
   React.useEffect(() => setMounted(true), []);
   if (!mounted) {
-    return <div className="p-6 text-sm text-muted-foreground">載入中…</div>;
+    return <PageLoader />;
   }
 
-  if (authQ.isLoading)
-    return <div className="p-6 text-sm text-muted-foreground">載入中…</div>;
+  if (authQ.isLoading) return <PageLoader />;
   if (authQ.isError || !auth) {
     return (
       <div className="p-6 text-sm text-destructive">
@@ -1718,9 +1724,30 @@ export default function HomeClient() {
                       return (
                         <div
                           key={playlist.id}
-                          className="min-w-[340px] w-[340px] shrink-0 rounded-2xl border bg-card p-4 text-sm text-muted-foreground"
+                          className="min-w-[340px] w-[340px] shrink-0 overflow-hidden rounded-2xl border border-border bg-card"
+                          role="status"
+                          aria-label={`載入 ${playlist.title}`}
                         >
-                          載入中…
+                          <div className="flex items-center justify-between border-b px-4 py-3">
+                            <div className="text-sm font-semibold">
+                              {playlist.title}
+                            </div>
+                            <div className="h-4 w-10 animate-pulse rounded bg-muted" />
+                          </div>
+                          <div className="space-y-2 p-3" style={{ height: 520 }}>
+                            {Array.from({ length: 6 }).map((_, index) => (
+                              <div
+                                key={index}
+                                className="flex gap-3 rounded-xl border border-border p-2"
+                              >
+                                <div className="h-14 w-24 shrink-0 animate-pulse rounded-lg bg-muted" />
+                                <div className="flex-1 space-y-2 py-1">
+                                  <div className="h-3 w-full animate-pulse rounded bg-muted" />
+                                  <div className="h-3 w-2/3 animate-pulse rounded bg-muted" />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       );
                     }

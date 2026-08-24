@@ -106,6 +106,13 @@ export function AppShell({
     );
   }
 
+  const goHome = React.useCallback(() => {
+    setMobileOpen(false);
+    if (pathname === "/") {
+      window.dispatchEvent(new Event("ytpm:go-home"));
+    }
+  }, [pathname]);
+
   const navLinkClass = (active: boolean) =>
     cn(
       "flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
@@ -116,18 +123,25 @@ export function AppShell({
 
   const NavItems = (
     <nav className="flex h-full flex-col p-4">
-      <div className="mb-6 flex items-center gap-2.5 px-1">
-        <BrandMark size={30} />
-        <div className="min-w-0">
-          <div className="truncate text-sm font-semibold tracking-tight">
-            Playlist Manager
+      <div className="mb-6 px-1">
+        <Link
+          href="/"
+          aria-label="回到首頁"
+          onClick={goHome}
+          className="flex items-center gap-2.5 rounded-xl outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <BrandMark size={30} />
+          <div className="min-w-0">
+            <div className="truncate text-sm font-semibold tracking-tight">
+              Playlist Manager
+            </div>
+            <div className="text-[11px] text-muted-foreground">批次管理工具</div>
           </div>
-          <div className="text-[11px] text-muted-foreground">批次管理工具</div>
-        </div>
+        </Link>
       </div>
 
       <div className="space-y-1">
-        <Link href="/" className={navLinkClass(isActive("/"))}>
+        <Link href="/" className={navLinkClass(isActive("/"))} onClick={goHome}>
           <ListMusic className="h-4 w-4" />
           播放清單管理
         </Link>
@@ -192,10 +206,17 @@ export function AppShell({
               </button>
 
               <div className="flex min-w-0 items-center gap-2.5">
-                <BrandMark />
-                <span className="hidden truncate text-sm font-semibold tracking-tight sm:inline">
-                  Playlist Manager
-                </span>
+                <Link
+                  href="/"
+                  aria-label="回到首頁"
+                  onClick={goHome}
+                  className="flex min-w-0 items-center gap-2.5 rounded-xl outline-none transition-opacity hover:opacity-80 focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <BrandMark />
+                  <span className="hidden truncate text-sm font-semibold tracking-tight sm:inline">
+                    Playlist Manager
+                  </span>
+                </Link>
                 <span className="chip-beta">🎉 Beta 免費試用中</span>
               </div>
 
