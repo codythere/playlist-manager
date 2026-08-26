@@ -189,18 +189,15 @@ export function AppShell({
           <header className="sticky top-0 z-30 border-b border-border/80 bg-background/80 backdrop-blur-xl">
             <div className="mx-auto flex h-14 w-full max-w-[1500px] items-center gap-3 px-4 md:px-6">
               <button
-                aria-label="開啟導覽選單"
-                className="icon-btn md:hidden"
-                onClick={() => setMobileOpen(true)}
-              >
-                <Menu className="h-5 w-5" />
-              </button>
-
-              <button
-                aria-label="切換側邊欄"
-                aria-expanded={desktopOpen}
-                className="icon-btn hidden md:inline-flex"
-                onClick={() => setDesktopOpen((v) => !v)}
+                aria-label="選單"
+                className="icon-btn"
+                onClick={() => {
+                  if (window.matchMedia("(min-width: 768px)").matches) {
+                    setDesktopOpen((v) => !v);
+                  } else {
+                    setMobileOpen(true);
+                  }
+                }}
               >
                 <Menu className="h-5 w-5" />
               </button>
